@@ -1,13 +1,21 @@
 library(shiny)
+library(shinyjs)
 library(shinydashboard)
 library(DT)
-library(shinyjs)
 library(sodium)
 library(lubridate)
 # library(countdown)
 
-task_descprition <- read.csv('CSV_tests/tasks_descrip.csv')
-users <- read.csv('CSV_tests/users.csv')
+labelMandatory <- function(label) {
+  tagList(
+    label,
+    span("*", class = "mandatory_star")
+  )
+}
+appCSS <- ".mandatory_star { color: red; }"
+
+task_descprition <- read.csv('CSV_inputs/tasks_descrip.csv')
+users <- read.csv('CSV_inputs/users.csv')
 
 uu <- c()
 x = c(1:length(users$USER_NAME))
@@ -30,9 +38,6 @@ y = c(1:length(task_descprition$DESCRIPTION))
 for (val in y) {
   task_des<- append(task_des, toString((task_descprition$DESCRIPTION)[val]))
 }
-
-
-i=1
 
 
 # Main login screen
@@ -70,8 +75,9 @@ credentials = data.frame(
 header <- dashboardHeader( title = "Welcome", uiOutput("logoutbtn"))
 
 sidebar <- dashboardSidebar(uiOutput("sidebarpanel")) 
-body <- dashboardBody(shinyjs::useShinyjs(), uiOutput("body"))
+body <- dashboardBody(shinyjs::useShinyjs(), shinyjs::inlineCSS(appCSS), uiOutput("body"))
 ui<-dashboardPage(header, sidebar, body, skin = "blue")
+
 
 server <- function(input, output, session) {
   
@@ -126,38 +132,60 @@ server <- function(input, output, session) {
   
   
   
-#### MODIFICAR A PARTIR D'AQUÍ PER VEURE COM POSAR QUE LES TASQUES CANVIIN   
+#### MODIFICAR A PARTIR D'AQUÍ PER VEURE COM POSAR QUE LES TASQUES CANVIIN  
   
+  observe({
+    if (!is.null(input$submit)) {
+      if(input$submit>0){
+        updateTextInput(session, "txt", value = "")
+      }
+    }
+  })
+
   output$body <- renderUI({
-    timer <- reactiveVal(10)
     if (USER$login == TRUE ) {
-      
       tabItems(
         if (input$passwd == "mypass1"){
         # First tab
         tabItem(tabName ="engine", class = "active",
                 fluidRow(
-                  h1(task_number[i]),
-                  h2(task_des[i]),
+                  h1("Evaluating a Search Engine"),
                   box(width = 12, 
+                      textOutput("task"),
+                      tags$head(tags$style("#task{color: black;
+                                 font-size: 26px;
+                                 font-style: bold;
+                                 }"
+                      )),
+                      textOutput("descrip"),
+                      tags$head(tags$style("#descrip{color: black;
+                                 font-size: 20px;``
+                                 }"
+                      )),
                       uiOutput("tab1"),
-                      textAreaInput("txt", "Enter the answer below:"),
+                      textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "250px"),
                       actionButton("submit", "Submit", class = "btn-primary"),
-                      verbatimTextOutput("placeholder", placeholder = TRUE
-                      )
                 )))
           }
         else{
           tabItem(tabName = "engine", class ="active",
                   fluidRow(
-                    h1(task_number[i]),
-                    h2(task_des[i]),
+                    h1("Evaluating a Search Engine"),
                     box(width = 12, 
+                        textOutput("task"),
+                        tags$head(tags$style("#task{color: black;
+                                 font-size: 26px;
+                                 font-style: bold;
+                                 }"
+                        )),
+                        textOutput("descrip"),
+                        tags$head(tags$style("#descrip{color: black;
+                                 font-size: 20px;``
+                                 }"
+                        )),
                         uiOutput("tab2"),
-                        textAreaInput("txt", "Enter the answer below:"),
+                        textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "250px"),
                         actionButton("submit", "Submit", class = "btn-primary"),
-                        verbatimTextOutput("placeholder", placeholder = TRUE
-                        )
                     )))
         }
       )
@@ -168,18 +196,31 @@ server <- function(input, output, session) {
     }
   })
   
+  output$task <- renderText({
+    if (input$submit+1 > length(task_number)){
+      "You have finished!"
+    }
+    else{
+      task_number[input$submit +1]
+    }
+  })
+  
+  output$descrip <- renderText({
+    if (input$submit+1 > length(task_number)){
+      "Congratulations!"
+    }
+    else{
+      task_des[input$submit +1]
+    }
+   
+  })
+  
   output$tab1 <- renderUI({
     tagList("URL link to the search engine:", url1)
   })
   output$tab2 <- renderUI({
     tagList("URL link to the search engine:", url2)
   })
-  
-  output$placeholder <- renderText({ 
-    #autoInvalidate()
-    input$submit
-    input$txt
-    })
 }
 
 runApp(list(ui = ui, server = server), launch.browser = TRUE)

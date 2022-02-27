@@ -52,8 +52,8 @@ library(shinydashboard)
 # 
 # shinyApp(ui, server)
 
-task_descprition <- read.csv('CSV_tests/tasks_descrip.csv')
-users <- read.csv('CSV_tests/users.csv')
+task_descprition <- read.csv('CSV_inputs/tasks_descrip.csv')
+users <- read.csv('CSV_inputs/users.csv')
 
 task_number <- c()
 y = c(1:length(task_descprition$TASK))
@@ -75,6 +75,7 @@ data <- matrix(0, nrow = 1, ncol = 1)
 #### MAKE TASK TITLE AND DESCRIPTION CHANGE ACCORDING TO WHCH ONE TURN IT IS !!!
 
   ui <- basicPage(
+    
     h1("Evaluating a search engine"),
     textOutput('task'),
     textOutput('task_description'),
@@ -89,8 +90,7 @@ data <- matrix(0, nrow = 1, ncol = 1)
   
   server <- function(input, output) {
     
-    autoInvalidate <- reactiveTimer(2000) # 20 seconds 
-    
+    autoInvalidate <- reactiveTimer(4000) 
     # observe({
     # 
     #   
@@ -110,6 +110,7 @@ data <- matrix(0, nrow = 1, ncol = 1)
     })
     output$task_description <-renderText({
       autoInvalidate()
+      print(autoInvalidate())
       paste("Description")
    
       # tasks[i]

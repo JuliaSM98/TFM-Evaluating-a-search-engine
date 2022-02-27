@@ -1,23 +1,22 @@
 library(shiny)
 library(shinyjs)
 
-fieldsMandatory <- c("name")
+fieldsMandatory <- c("name") 
 humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
 
-labelMandatory <- function(label) {
+labelMandatory <- function(label) {#usado
   tagList(
     label,
     span("*", class = "mandatory_star")
   )
 }
 
-appCSS <-
-  ".mandatory_star { color: red; }"
+appCSS <- ".mandatory_star { color: red; }" #usado
 
 
   ui = fluidPage(
     shinyjs::useShinyjs(),
-    shinyjs::inlineCSS(appCSS),
+    shinyjs::inlineCSS(appCSS), #usado
     titlePanel("Evaluating a search engine"),
     
     div(
@@ -27,6 +26,7 @@ appCSS <-
       actionButton("submit", "Submit", class = "btn-primary")
     )
   )
+  
   server = function(input, output) {
     observe({
       mandatoryFilled <-
@@ -64,12 +64,5 @@ appCSS <-
       saveData(formData())
     })
     
-    observeEvent(input$submit, {
-      # call a reactive expression defined before to go to the first task
-    })
-    
   }
   shinyApp(ui = ui, server = server)
-  
-  
-
