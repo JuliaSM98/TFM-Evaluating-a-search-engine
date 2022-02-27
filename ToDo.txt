@@ -1,0 +1,5 @@
+ToDo:
+- Modify the timer to 10 min
+- When pressing dismiss page should go to next task
+- Save all the answers from a user in the same csv
+- Do something to keep submit disabled after all the tasks, to stop the timer and that nothing happens

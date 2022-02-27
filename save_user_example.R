@@ -36,9 +36,9 @@ appCSS <- ".mandatory_star { color: red; }" #usado
                },
                logical(1))
       mandatoryFilled <- all(mandatoryFilled)
-      
       shinyjs::toggleState(id = "submit", condition = mandatoryFilled)
     }) 
+    
     fieldsAll <- c("name")
     responsesDir <- file.path("response/")
     epochTime <- function() {

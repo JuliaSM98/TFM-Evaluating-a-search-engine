@@ -4,7 +4,10 @@ library(shinydashboard)
 library(DT)
 library(sodium)
 library(lubridate)
-# library(countdown)
+
+fieldsMandatory <- c("txt") 
+humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
+
 
 labelMandatory <- function(label) {
   tagList(
@@ -130,10 +133,6 @@ server <- function(input, output, session) {
     }
   })
   
-  
-  
-#### MODIFICAR A PARTIR D'AQUÍ PER VEURE COM POSAR QUE LES TASQUES CANVIIN  
-  
   observe({
     if (!is.null(input$submit)) {
       if(input$submit>0){
@@ -141,7 +140,69 @@ server <- function(input, output, session) {
       }
     }
   })
+  
+  ################## Make all csv be saved in one #############################
+  #############################################################################
+  observe({
+    mandatoryFilled <-
+      vapply(fieldsMandatory,
+             function(x) {
+               !is.null(input[[x]]) && input[[x]] != ""
+             },
+             logical(1))
+    mandatoryFilled <- all(mandatoryFilled)
+    
+    shinyjs::toggleState(id = "submit", condition = mandatoryFilled)
+  }) 
+  fieldsAll <- c("userName","txt")
+  responsesDir <- file.path("response/")
+  formData <- reactive({
+    data <- sapply(fieldsAll, function(x) input[[x]])
+    data <- c(data, timestamp = humanTime())
+    data <- c(data, task= task_number[input$submit])
+    data <- t(data)
+    data
+  })
+  saveData <- function(data) {
+    fileName <- sprintf("%s_%s.csv",
+                        input$userName,
+                        digest::digest(data))
+    
+    write.csv(x = data, file = file.path(responsesDir, fileName),
+              row.names = FALSE, quote = TRUE)
+  }
+  
+  
+  
+  #############################################################################
 
+  timer <- reactiveVal(20)
+  active <- reactiveVal(FALSE)
+  
+  
+  observe({
+    invalidateLater(1000, session)
+    isolate({
+      if (USER$login == TRUE & timer()>0) {
+        active(TRUE)
+        if(active())
+        {
+          timer(timer()-1)
+          if(timer()<1)
+          {
+            active(FALSE)
+            showModal(modalDialog(
+              title = "Important message",
+              "Countdown completed!"
+            ))
+          }
+        }}
+    })
+  })
+  
+  observeEvent(input$submit, {timer(20)})
+  
+  #############################################################################
   output$body <- renderUI({
     if (USER$login == TRUE ) {
       tabItems(
@@ -163,6 +224,11 @@ server <- function(input, output, session) {
                                  }"
                       )),
                       uiOutput("tab1"),
+                      textOutput('timeleft'),
+                      tags$head(tags$style("#timeleft{color: red;
+                                 font-size: 20px;``
+                                 }"
+                      )),
                       textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "250px"),
                       actionButton("submit", "Submit", class = "btn-primary"),
                 )))
@@ -184,6 +250,11 @@ server <- function(input, output, session) {
                                  }"
                         )),
                         uiOutput("tab2"),
+                        textOutput('timeleft'),
+                        tags$head(tags$style("#timeleft{color: red;
+                                 font-size: 20px;``
+                                 }"
+                        )),
                         textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "250px"),
                         actionButton("submit", "Submit", class = "btn-primary"),
                     )))
@@ -220,6 +291,28 @@ server <- function(input, output, session) {
   })
   output$tab2 <- renderUI({
     tagList("URL link to the search engine:", url2)
+  })
+  observeEvent(input$submit, {
+    if (input$submit > length(task_number)){
+    }
+    else{
+      saveData(formData())
+    }
+  })
+  
+  # Do something to keep submit disabled after all the tasks 
+  
+  # observe({
+  #   if (!is.null(input$login) & !is.null(input$submit)){
+  #     if (as.integer(input$submit) > length(task_number)){
+  #       shinyjs::disable("submit")
+  #     }
+  #   }
+  # })
+  
+  # Output the time left.
+  output$timeleft <- renderText({
+    paste("Time left: ", seconds_to_period(timer()))
   })
 }
 
