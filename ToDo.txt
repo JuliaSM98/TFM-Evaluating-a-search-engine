@@ -1,11 +1,12 @@
 ToDo:
-- Save all the answers from a user in the same csv 
-- Add to data output: time for each task, engine
+- Add to data output: time used in each task
+- also intead of timestamp, we could divide output data by date and time/timestamp
 - Pantalla de “splash”: sin prisas, le cuenta al usuario de qué va el experimento. Cuando pulse OK, ya sabrá que está monitorizado y que cada tarea tiene un límite de tiempo. 
-- Poner fraccón de la tarea (ejemplo tarea 1 de 3 tareas) para que el usuario pueda ver por donde va
 
 Done: 
 - Change the password, one different per user, and add one column to users.csv to differientate the engine
 - the timeout message also has to be configurable 
 - each task has a configurabel time (in task_descrip csv)(configure timer)
 - Do something to keep submit disabled after all the tasks, to stop the timer and that nothing happens
+- Poner fraccón de la tarea (ejemplo tarea 1 de 3 tareas) para que el usuario pueda ver por donde va
+- Save all the answers from a user in the same csv 

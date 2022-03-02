@@ -170,17 +170,29 @@ server <- function(input, output, session) {
   formData <- reactive({
     data <- sapply(fieldsAll, function(x) input[[x]])
     data <- c(data, timestamp = humanTime())
-    data <- c(data, task= task_number[input$submit])
+    data <- c(data, task = task_number[input$submit])
+    i<-match(input$userName,users$USER_NAME)
+    data <- c(data, engine = users$Engine[i])
     data <- t(data)
     data
   })
   saveData <- function(data) {
-    fileName <- sprintf("%s_%s.csv",
-                        input$userName,
-                        digest::digest(data))
+    # fileName <- sprintf("%s_%s.csv",
+    #                     input$userName,
+    #                     digest::digest(data))
+    fileName1 <- sprintf("app_results.csv")
     
-    write.csv(x = data, file = file.path(responsesDir, fileName),
-              row.names = FALSE, quote = TRUE)
+    # write.csv(x = data, file = file.path(responsesDir, fileName),
+    #           row.names = FALSE, quote = TRUE)
+    file = file.path(responsesDir, fileName1)
+    if (file.size(file)==0){
+      write.table(x = data, file = file.path(responsesDir, fileName1), append = TRUE,
+                  sep = ",", row.names = FALSE, col.names = TRUE, qmethod = "double")
+    }
+    else{
+      write.table(x = data, file = file.path(responsesDir, fileName1), append = TRUE,
+                  sep = ",", row.names = FALSE, col.names = FALSE, qmethod = "double")
+    }
   }
   
   #############################################################################
@@ -305,7 +317,7 @@ server <- function(input, output, session) {
       "You have finished!"
     }
     else{
-      task_number[input$submit +1]
+      paste(task_number[input$submit +1],"of",length(task_number))
     }
   })
   

@@ -4,24 +4,23 @@ library(shinyjs)
 fieldsMandatory <- c("name") 
 humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
 
-labelMandatory <- function(label) {#usado
+labelMandatory <- function(label) {
   tagList(
     label,
     span("*", class = "mandatory_star")
   )
 }
 
-appCSS <- ".mandatory_star { color: red; }" #usado
+appCSS <- ".mandatory_star { color: red; }"
 
 
   ui = fluidPage(
     shinyjs::useShinyjs(),
-    shinyjs::inlineCSS(appCSS), #usado
+    shinyjs::inlineCSS(appCSS), 
     titlePanel("Evaluating a search engine"),
     
     div(
       id = "form",
-      
       textInput("name", labelMandatory("Name"), ""),
       actionButton("submit", "Submit", class = "btn-primary")
     )
@@ -51,12 +50,23 @@ appCSS <- ".mandatory_star { color: red; }" #usado
       data
     })
     saveData <- function(data) {
-      fileName <- sprintf("%s_%s.csv",
-                          humanTime(),
-                          digest::digest(data))
-      
+      # fileName <- sprintf("%s_%s.csv",
+      #                     humanTime(),
+      #                     digest::digest(data))
+      fileName <- sprintf("test_results.csv")
+      fileName1 <- sprintf("test_results1.csv")
       write.csv(x = data, file = file.path(responsesDir, fileName),
                 row.names = FALSE, quote = TRUE)
+      
+      # write(x = data, file = file.path(responsesDir, fileName1),
+      #       ncolumns = 1,
+      #       append = TRUE, sep = " ")
+      
+      write.table(x = data, file = file.path(responsesDir, fileName1), append = TRUE,
+                  sep = ",", row.names = TRUE, col.names = NA,
+                  qmethod = "double")
+      
+      
     }
     
     # action to take when submit button is pressed
