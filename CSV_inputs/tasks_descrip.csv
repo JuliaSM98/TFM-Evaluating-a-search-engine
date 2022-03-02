@@ -1,5 +1,4 @@
-"TASK","DESCRIPTION"
-"Task 1","Descprition 1"
-"Task 2","Description 2"
-"Task 3","Description 3"
-
+"TASK","DESCRIPTION","TIME_MIN_SEC","COUNTDOWN_MESSAGE"
+"Task 1","Descprition 1","10:00","Finished Task 1!"
+"Task 2","Description 2","10:00","Finished Task 2!"
+"Task 3","Description 3","10:00","Finished Task 3!"

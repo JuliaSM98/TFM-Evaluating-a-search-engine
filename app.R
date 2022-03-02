@@ -4,6 +4,7 @@ library(shinydashboard)
 library(DT)
 library(sodium)
 library(lubridate)
+library(stringr)
 
 fieldsMandatory <- c("txt") 
 humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
@@ -17,30 +18,39 @@ labelMandatory <- function(label) {
 }
 appCSS <- ".mandatory_star { color: red; }"
 
-task_descprition <- read.csv('CSV_inputs/tasks_descrip.csv')
+task_description <- read.csv('CSV_inputs/tasks_descrip.csv')
 users <- read.csv('CSV_inputs/users.csv')
 
-uu <- c()
+user_name <- c()
 x = c(1:length(users$USER_NAME))
 for (val in x) {
-  uu<- append(uu, toString((users$USER_NAME)[val]))
-}
-pp<-c()
-xx = c(1:length(users$Password))
-for (val in xx) {
-  pp<- append(pp, toString((users$Password)[val]))
+  user_name<- append(user_name, toString((users$USER_NAME)[val]))
 }
 
+pass<-c()
+for (val in x) {
+  pass<- append(pass, toString((users$Password)[val]))
+}
+
+
 task_number <- c()
-y = c(1:length(task_descprition$TASK))
+y = c(1:length(task_description$TASK))
 for (val in y) {
-  task_number<- append(task_number, toString((task_descprition$TASK)[val]))
+  task_number<- append(task_number, toString((task_description$TASK)[val]))
 }
 task_des <- c()
-y = c(1:length(task_descprition$DESCRIPTION))
 for (val in y) {
-  task_des<- append(task_des, toString((task_descprition$DESCRIPTION)[val]))
+  task_des<- append(task_des, toString((task_description$DESCRIPTION)[val]))
 }
+
+min <- c()
+sec <- c()
+for (val in y) {
+  t <- (str_split((task_description$TIME_MIN_SEC)[val],":"))
+  min <- append(min, as.integer(sapply(t,"[[",1)))
+  sec <- append(sec, as.integer(sapply(t,"[[",2)))
+}
+
 
 
 # Main login screen
@@ -61,17 +71,17 @@ loginpage <- div(id = "loginpage", style = "width: 500px; max-width: 100%; margi
                                   style = "color: red; font-weight: 600; 
                                             padding-top: 5px;font-size:16px;", 
                                   class = "text-center"))),
-                     br(),
-                     br(),
-                     tags$code("For search engine 1 the Password is: mypass1"),
-                     br(),
-                     tags$code("For search engine 2 the Password is: mypass2")
+                     # br(),
+                     # br(),
+                     # tags$code("For search engine 1 the Password is: mypass1"),
+                     # br(),
+                     # tags$code("For search engine 2 the Password is: mypass2")
                    ))
 )
 
 credentials = data.frame(
-  username_id = uu,
-  passod   = sapply(pp,password_store),
+  username_id = user_name,
+  passod   = sapply(pass,password_store),
   stringsAsFactors = F
 )
 
@@ -143,6 +153,9 @@ server <- function(input, output, session) {
   
   ################## Make all csv be saved in one #############################
   #############################################################################
+  
+  ## If I take away the option to leave it blank (input[[x]!="])
+  ## this observe is not necessary
   observe({
     mandatoryFilled <-
       vapply(fieldsMandatory,
@@ -151,9 +164,24 @@ server <- function(input, output, session) {
              },
              logical(1))
     mandatoryFilled <- all(mandatoryFilled)
-    
     shinyjs::toggleState(id = "submit", condition = mandatoryFilled)
   }) 
+  
+  # Do something to keep submit disabled after all the tasks 
+  
+  observe({
+    # mandatoryFilled <-
+    #   vapply(fieldsMandatory,
+    #          function(x) {
+    #            (as.integer(input$submit) > length(task_number))
+    #          },
+    #          logical(0))
+    # mandatoryFilled <- all(mandatoryFilled)
+    # shinyjs::toggleState(id = "submit", condition = mandatoryFilled)
+  })
+  
+  
+  
   fieldsAll <- c("userName","txt")
   responsesDir <- file.path("response/")
   formData <- reactive({
@@ -175,38 +203,50 @@ server <- function(input, output, session) {
   
   
   #############################################################################
-
-  timer <- reactiveVal(20)
+  
+  
+  #i <- match(task_number[input$submit +1],task_description$TASK)
+  i<-1
+  minutes <- reactiveVal(min[i])
+  seconds <- reactiveVal(sec[i])
   active <- reactiveVal(FALSE)
-  
-  
   observe({
-    invalidateLater(1000, session)
+    invalidateLater(100, session)
     isolate({
-      if (USER$login == TRUE & timer()>0) {
+      if (USER$login == TRUE & minutes()>=0 & seconds()>=0) {
         active(TRUE)
-        if(active())
+        if(active() & !(minutes()==0 & seconds()==0))
         {
-          timer(timer()-1)
-          if(timer()<1)
-          {
+          if (seconds() == 0){
+            seconds(60)
+            minutes(minutes() - 1)
+          }
+          seconds(seconds()-1)
+          if(minutes() ==0 & seconds() ==0){
             active(FALSE)
+            j <- match(task_number[input$submit +1],task_description$TASK)
             showModal(modalDialog(
               title = "Important message",
-              "Countdown completed!"
+              task_description$COUNTDOWN_MESSAGE[j]
             ))
           }
-        }}
+        }
+        }
     })
   })
   
-  observeEvent(input$submit, {timer(20)})
+  observeEvent(input$submit, {
+    i <- match(task_number[input$submit +1],task_description$TASK)
+    minutes(min[i])
+    seconds(sec[i])
+  })
   
   #############################################################################
   output$body <- renderUI({
     if (USER$login == TRUE ) {
+      i<-match(input$userName,users$USER_NAME)
       tabItems(
-        if (input$passwd == "mypass1"){
+        if (users$Engine[i] == 1){
         # First tab
         tabItem(tabName ="engine", class = "active",
                 fluidRow(
@@ -299,20 +339,8 @@ server <- function(input, output, session) {
       saveData(formData())
     }
   })
-  
-  # Do something to keep submit disabled after all the tasks 
-  
-  # observe({
-  #   if (!is.null(input$login) & !is.null(input$submit)){
-  #     if (as.integer(input$submit) > length(task_number)){
-  #       shinyjs::disable("submit")
-  #     }
-  #   }
-  # })
-  
-  # Output the time left.
   output$timeleft <- renderText({
-    paste("Time left: ", seconds_to_period(timer()))
+    paste("Time left:", minutes(), "M", seconds(), "S")
   })
 }
 

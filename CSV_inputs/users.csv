@@ -1,4 +1,4 @@
-"USER_NAME", "Password"
-"user1","mypass1"
-"user2","mypass2"
-"user3","mypass1"
+"USER_NAME","Password","Engine"
+"user1","mypass1",1
+"user2","mypass2",2
+"user3","mypass3",1
