@@ -183,14 +183,14 @@ server <- function(input, output, session) {
               row.names = FALSE, quote = TRUE)
   }
   
-  
-  
   #############################################################################
-  
-  ## arreglar error que em dona quan arribo al final
-  
-  #i <- match(task_number[isolate(input$submit) +1],task_description$TASK)
-  i<-1
+  if(isolate(USER$login) == TRUE){
+    k <- isolate(input$submit)
+  }
+  else {
+    k<-0
+  }
+  i <- match(task_number[k +1],task_description$TASK)
   minutes <- reactiveVal(min[i])
   seconds <- reactiveVal(sec[i])
   active <- reactiveVal(FALSE)
@@ -213,6 +213,7 @@ server <- function(input, output, session) {
               title = "Important message",
               task_description$COUNTDOWN_MESSAGE[j]
             ))
+            shinyjs::toggleState(id = "txt", condition = FALSE)
           }
         }
         }
@@ -222,10 +223,12 @@ server <- function(input, output, session) {
   observeEvent(input$submit, {
     i <- match(task_number[input$submit +1],task_description$TASK)
     if(!is.na(i)){
+      shinyjs::toggleState(id = "txt", condition = TRUE)
       minutes(min[i])
       seconds(sec[i])
     }
     else{
+      shinyjs::toggleState(id = "txt", condition = FALSE)
       minutes(0)
       seconds(0)
       shinyjs::toggleState(id = "submit", condition = FALSE)

@@ -1,8 +1,8 @@
 ToDo:
-- When pressing dismiss page should go to next task
 - Save all the answers from a user in the same csv 
-- Pantalla de “splash”: sin prisas, le cuenta al usuario de qué va el experimento. Cuando pulse OK, ya sabrá que está monitorizado y que cada tarea tiene un límite de tiempo. 
 - Add to data output: time for each task, engine
+- Pantalla de “splash”: sin prisas, le cuenta al usuario de qué va el experimento. Cuando pulse OK, ya sabrá que está monitorizado y que cada tarea tiene un límite de tiempo. 
+- Poner fraccón de la tarea (ejemplo tarea 1 de 3 tareas) para que el usuario pueda ver por donde va
 
 Done: 
 - Change the password, one different per user, and add one column to users.csv to differientate the engine
