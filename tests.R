@@ -35,6 +35,11 @@ time <- function(minutes,seconds){
   }
 }
 
+
+minutes = NA
+if (is.na(minutes)){
+  paste("hola")}
+
 ###############
 
 min <- c()

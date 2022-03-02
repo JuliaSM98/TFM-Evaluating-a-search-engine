@@ -1,13 +1,11 @@
 ToDo:
 - When pressing dismiss page should go to next task
-- Save all the answers from a user in the same csv
-- Do something to keep submit disabled after all the tasks, to stop the timer and that nothing happens--> Go to a page where it says it has finished 
-- each task has a configurabel time (in task_descrip csv)(configure timer)
- 
+- Save all the answers from a user in the same csv 
 - Pantalla de “splash”: sin prisas, le cuenta al usuario de qué va el experimento. Cuando pulse OK, ya sabrá que está monitorizado y que cada tarea tiene un límite de tiempo. 
 - Add to data output: time for each task, engine
-- revisar si todos los vectores del principo son necesarios o puedo hacer tas_des$HOLA[1] por ejemplo!!
 
 Done: 
 - Change the password, one different per user, and add one column to users.csv to differientate the engine
 - the timeout message also has to be configurable 
+- each task has a configurabel time (in task_descrip csv)(configure timer)
+- Do something to keep submit disabled after all the tasks, to stop the timer and that nothing happens

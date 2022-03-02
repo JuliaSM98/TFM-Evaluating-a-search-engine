@@ -9,7 +9,6 @@ library(stringr)
 fieldsMandatory <- c("txt") 
 humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
 
-
 labelMandatory <- function(label) {
   tagList(
     label,
@@ -50,7 +49,6 @@ for (val in y) {
   min <- append(min, as.integer(sapply(t,"[[",1)))
   sec <- append(sec, as.integer(sapply(t,"[[",2)))
 }
-
 
 
 # Main login screen
@@ -154,32 +152,17 @@ server <- function(input, output, session) {
   ################## Make all csv be saved in one #############################
   #############################################################################
   
-  ## If I take away the option to leave it blank (input[[x]!="])
-  ## this observe is not necessary
-  observe({
-    mandatoryFilled <-
-      vapply(fieldsMandatory,
-             function(x) {
-               !is.null(input[[x]]) && input[[x]] != ""
-             },
-             logical(1))
-    mandatoryFilled <- all(mandatoryFilled)
-    shinyjs::toggleState(id = "submit", condition = mandatoryFilled)
-  }) 
-  
-  # Do something to keep submit disabled after all the tasks 
-  
-  observe({
-    # mandatoryFilled <-
-    #   vapply(fieldsMandatory,
-    #          function(x) {
-    #            (as.integer(input$submit) > length(task_number))
-    #          },
-    #          logical(0))
-    # mandatoryFilled <- all(mandatoryFilled)
-    # shinyjs::toggleState(id = "submit", condition = mandatoryFilled)
-  })
-  
+  ## block if answer is in blank!
+  # observe({
+  #   mandatoryFilled <-
+  #     vapply(fieldsMandatory,
+  #            function(x) {
+  #              !is.null(input[[x]]) && input[[x]] != ""
+  #            },
+  #            logical(1))
+  #   mandatoryFilled <- all(mandatoryFilled)
+  #   shinyjs::toggleState(id = "submit", condition = mandatoryFilled)
+  # }) 
   
   
   fieldsAll <- c("userName","txt")
@@ -204,20 +187,21 @@ server <- function(input, output, session) {
   
   #############################################################################
   
+  ## arreglar error que em dona quan arribo al final
   
-  #i <- match(task_number[input$submit +1],task_description$TASK)
+  #i <- match(task_number[isolate(input$submit) +1],task_description$TASK)
   i<-1
   minutes <- reactiveVal(min[i])
   seconds <- reactiveVal(sec[i])
   active <- reactiveVal(FALSE)
   observe({
-    invalidateLater(100, session)
+    invalidateLater(1, session)
     isolate({
-      if (USER$login == TRUE & minutes()>=0 & seconds()>=0) {
+      if (USER$login == TRUE & (minutes()>=0 & seconds()>=0)){
         active(TRUE)
         if(active() & !(minutes()==0 & seconds()==0))
         {
-          if (seconds() == 0){
+          if (seconds() == 0 ){
             seconds(60)
             minutes(minutes() - 1)
           }
@@ -237,11 +221,17 @@ server <- function(input, output, session) {
   
   observeEvent(input$submit, {
     i <- match(task_number[input$submit +1],task_description$TASK)
-    minutes(min[i])
-    seconds(sec[i])
+    if(!is.na(i)){
+      minutes(min[i])
+      seconds(sec[i])
+    }
+    else{
+      minutes(0)
+      seconds(0)
+      shinyjs::toggleState(id = "submit", condition = FALSE)
+    }
   })
   
-  #############################################################################
   output$body <- renderUI({
     if (USER$login == TRUE ) {
       i<-match(input$userName,users$USER_NAME)
