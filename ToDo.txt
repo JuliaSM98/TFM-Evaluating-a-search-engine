@@ -1,12 +1,16 @@
-ToDo:
-- Add to data output: time used in each task
-- also intead of timestamp, we could divide output data by date and time/timestamp
-- Pantalla de “splash”: sin prisas, le cuenta al usuario de qué va el experimento. Cuando pulse OK, ya sabrá que está monitorizado y que cada tarea tiene un límite de tiempo. 
+DONE:
+- el fichero de respuestas debe ser tvs para evitar problemas con lo que escribe el usuario (no se le puede pedir que evite usar comas o comillas) 
+- also instead of timestamp, we could divide output data by date and time/timestamp
+- Busca en el paper el link a los datos y/o cuestionarios.
+- Add to data output: time used in each task--> time format + seconds !!!
 
-Done: 
-- Change the password, one different per user, and add one column to users.csv to differientate the engine
-- the timeout message also has to be configurable 
-- each task has a configurabel time (in task_descrip csv)(configure timer)
-- Do something to keep submit disabled after all the tasks, to stop the timer and that nothing happens
-- Poner fraccón de la tarea (ejemplo tarea 1 de 3 tareas) para que el usuario pueda ver por donde va
-- Save all the answers from a user in the same csv 
+
+
+ToDo:
+- maybe the number of the task put it at the bottom right site 
+- He encontrado la tesis doctoral, habría que hacer un questionario sobre la edad y todo eso antes a los participantes?:
+age, gender, nationality, n* languages they know, course, experience with the engine 
+- mirar los frames para embutir sitios web en el frame, y poder monitorizar el número de cambios de página (y poco más te va a dejar monitorizar). --> añadir el cambio de paginas en el output
+
+
+

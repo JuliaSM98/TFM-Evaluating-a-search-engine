@@ -1,3 +1,4 @@
+# revise if i need all the libraries
 library(shiny)
 library(shinyjs)
 library(shinydashboard)
@@ -5,21 +6,32 @@ library(DT)
 library(sodium)
 library(lubridate)
 library(stringr)
+library(base)
 
+
+# Mandatory to write somethings in the text boxes! This way the red asterisk will appear 
 fieldsMandatory <- c("txt") 
-humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
 
+# We define Date and Time, too know at which date and at which time the subject pressed submit
+Date <- function() format(Sys.time(), "%Y-%m-%d")
+Time <-function() format(Sys.time(), "%H:%M:%OS")
+#humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
+
+# definition of the red star
 labelMandatory <- function(label) {
   tagList(
     label,
     span("*", class = "mandatory_star")
   )
 }
-appCSS <- ".mandatory_star { color: red; }"
+appCSS <- ".mandatory_star { color: red; }
+           } "
 
+# read configuration files
 task_description <- read.csv('CSV_inputs/tasks_descrip.csv')
 users <- read.csv('CSV_inputs/users.csv')
 
+##################### Information to extract from csv's ########################
 user_name <- c()
 x = c(1:length(users$USER_NAME))
 for (val in x) {
@@ -49,7 +61,7 @@ for (val in y) {
   min <- append(min, as.integer(sapply(t,"[[",1)))
   sec <- append(sec, as.integer(sapply(t,"[[",2)))
 }
-
+################################################################################
 
 # Main login screen
 loginpage <- div(id = "loginpage", style = "width: 500px; max-width: 100%; margin: 0 auto; padding: 20px;",
@@ -69,11 +81,6 @@ loginpage <- div(id = "loginpage", style = "width: 500px; max-width: 100%; margi
                                   style = "color: red; font-weight: 600; 
                                             padding-top: 5px;font-size:16px;", 
                                   class = "text-center"))),
-                     # br(),
-                     # br(),
-                     # tags$code("For search engine 1 the Password is: mypass1"),
-                     # br(),
-                     # tags$code("For search engine 2 the Password is: mypass2")
                    ))
 )
 
@@ -90,15 +97,16 @@ body <- dashboardBody(shinyjs::useShinyjs(), shinyjs::inlineCSS(appCSS), uiOutpu
 ui<-dashboardPage(header, sidebar, body, skin = "blue")
 
 
+# Server function 
 server <- function(input, output, session) {
   
-  url1 <- a("El País", href="https://elpais.com/")
-  url2 <- a("El Mundo", href="https://www.elmundo.es/")
+  # To be changed 
+  url1 = "https://elpais.com/"
+  url2 = "https://www.elmundo.es/"
   
-  
+  # when login is false 
   login = FALSE
   USER <- reactiveValues(login = login)
-  
   observe({ 
     if (USER$login == FALSE) {
       if (!is.null(input$login)) {
@@ -123,7 +131,6 @@ server <- function(input, output, session) {
     }    
   })
   
-  
   output$logoutbtn <- renderUI({
     req(USER$login)
     tags$li(a("Logout", 
@@ -133,6 +140,7 @@ server <- function(input, output, session) {
                     font-weight: bold; margin:5px; padding: 10px;")
   })
   
+  # Once the login becomes true 
   output$sidebarpanel <- renderUI({
     if (USER$login == TRUE){ 
       sidebarMenu(
@@ -141,6 +149,7 @@ server <- function(input, output, session) {
     }
   })
   
+  # If someone writes anwer and clicks submit, clear txt
   observe({
     if (!is.null(input$submit)) {
       if(input$submit>0){
@@ -148,54 +157,8 @@ server <- function(input, output, session) {
       }
     }
   })
-  
-  ################## Make all csv be saved in one #############################
-  #############################################################################
-  
-  ## block if answer is in blank!
-  # observe({
-  #   mandatoryFilled <-
-  #     vapply(fieldsMandatory,
-  #            function(x) {
-  #              !is.null(input[[x]]) && input[[x]] != ""
-  #            },
-  #            logical(1))
-  #   mandatoryFilled <- all(mandatoryFilled)
-  #   shinyjs::toggleState(id = "submit", condition = mandatoryFilled)
-  # }) 
-  
-  
-  fieldsAll <- c("userName","txt")
-  responsesDir <- file.path("response/")
-  formData <- reactive({
-    data <- sapply(fieldsAll, function(x) input[[x]])
-    data <- c(data, timestamp = humanTime())
-    data <- c(data, task = task_number[input$submit])
-    i<-match(input$userName,users$USER_NAME)
-    data <- c(data, engine = users$Engine[i])
-    data <- t(data)
-    data
-  })
-  saveData <- function(data) {
-    # fileName <- sprintf("%s_%s.csv",
-    #                     input$userName,
-    #                     digest::digest(data))
-    fileName1 <- sprintf("app_results.csv")
-    
-    # write.csv(x = data, file = file.path(responsesDir, fileName),
-    #           row.names = FALSE, quote = TRUE)
-    file = file.path(responsesDir, fileName1)
-    if (file.size(file)==0){
-      write.table(x = data, file = file.path(responsesDir, fileName1), append = TRUE,
-                  sep = ",", row.names = FALSE, col.names = TRUE, qmethod = "double")
-    }
-    else{
-      write.table(x = data, file = file.path(responsesDir, fileName1), append = TRUE,
-                  sep = ",", row.names = FALSE, col.names = FALSE, qmethod = "double")
-    }
-  }
-  
-  #############################################################################
+
+  ####### Define the time for each task and also the countdown message ########
   if(isolate(USER$login) == TRUE){
     k <- isolate(input$submit)
   }
@@ -207,7 +170,7 @@ server <- function(input, output, session) {
   seconds <- reactiveVal(sec[i])
   active <- reactiveVal(FALSE)
   observe({
-    invalidateLater(1, session)
+    invalidateLater(1000, session)
     isolate({
       if (USER$login == TRUE & (minutes()>=0 & seconds()>=0)){
         active(TRUE)
@@ -228,16 +191,80 @@ server <- function(input, output, session) {
             shinyjs::toggleState(id = "txt", condition = FALSE)
           }
         }
-        }
+      }
     })
   })
   
+  
+  # observeEvent(input$submit, {
+  #   if (input$submit > length(task_number)){
+  #   }
+  #   else{
+  #     saveData(formData())
+  #   }
+  # })
+  
+  Timecomplete <- function(j){
+    m<-minutes()-min[j]
+    s<-seconds()-sec[j]
+    if (s<0){
+      s<-60+s
+      if (m>0) m<-m-1
+      else m<-0
+    }
+    return(paste(m,s,sep=":"))
+  }
+  
+  # When input$submit, we change the min/sec from next task and save data
+  
+  
+  # define the form in which we want to save data
+  fieldsAll <- c("userName","txt")
+  responsesDir <- file.path("response/")
+  # formData <- reactive({
+  #   data <- sapply(fieldsAll, function(x) input[[x]])
+  #   data <- c(data, datestamp = Date())
+  #   data <- c(data, timestamp = Time())
+  #   data <- c(data, TimeToComplete = "hola")
+  #   data <- c(data, task = task_number[input$submit])
+  #   i<-match(input$userName,users$USER_NAME)
+  #   data <- c(data, engine = users$Engine[i])
+  #   data <- t(data)
+  #   data
+  # })
+  
   observeEvent(input$submit, {
     i <- match(task_number[input$submit +1],task_description$TASK)
+    j <- match(task_number[input$submit],task_description$TASK)
+    
+    m<-min[j]-minutes()
+    s<-sec[j]-seconds()
+    if (s<0 | m<0){
+      if (s<0){
+        s<-60+s
+        m<-m-1
+      }
+      if (m<0) m<-0
+    }
+    
+    formData <- reactive({
+      data <- sapply(fieldsAll, function(x) input[[x]])
+      data <- c(data, datestamp = Date())
+      data <- c(data, timestamp = Time())
+      data <- c(data, TimeToComplete = paste(m,s,sep=":"))
+      data <- c(data, SecondsToComplete = m*60+s)
+      data <- c(data, task = task_number[input$submit])
+      i<-match(input$userName,users$USER_NAME)
+      data <- c(data, engine = users$Engine[i])
+      data <- t(data)
+      data
+    })
+    
     if(!is.na(i)){
       shinyjs::toggleState(id = "txt", condition = TRUE)
       minutes(min[i])
       seconds(sec[i])
+      
     }
     else{
       shinyjs::toggleState(id = "txt", condition = FALSE)
@@ -245,7 +272,31 @@ server <- function(input, output, session) {
       seconds(0)
       shinyjs::toggleState(id = "submit", condition = FALSE)
     }
+    
+    if (input$submit > length(task_number)){
+    }
+    else{
+      saveData(formData())
+      #saveData(formData(TimeToComplete("cola")))
+    }
   })
+  #############################################################################
+  # Define function to save the data
+  saveData <- function(data) {
+    fileName1 <- sprintf("app_results.tsv")
+    file = file.path(responsesDir, fileName1)
+    
+    if (!file.exists(paste(responsesDir,fileName1,sep=""))){
+      write.table(x = data, file = file.path(responsesDir, fileName1), append = TRUE,
+                  row.names = FALSE, col.names = TRUE, qmethod = "double")
+    }
+    else{
+      write.table(x = data, file = file.path(responsesDir, fileName1), append = TRUE,
+                  row.names = FALSE, col.names = FALSE, qmethod = "double")
+    }
+  }
+  
+
   
   output$body <- renderUI({
     if (USER$login == TRUE ) {
@@ -268,13 +319,13 @@ server <- function(input, output, session) {
                                  font-size: 20px;``
                                  }"
                       )),
-                      uiOutput("tab1"),
                       textOutput('timeleft'),
                       tags$head(tags$style("#timeleft{color: red;
                                  font-size: 20px;``
                                  }"
                       )),
-                      textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "250px"),
+                      htmlOutput("tab1"),
+                      textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "100px"),
                       actionButton("submit", "Submit", class = "btn-primary"),
                 )))
           }
@@ -294,12 +345,12 @@ server <- function(input, output, session) {
                                  font-size: 20px;``
                                  }"
                         )),
-                        uiOutput("tab2"),
                         textOutput('timeleft'),
                         tags$head(tags$style("#timeleft{color: red;
                                  font-size: 20px;``
                                  }"
                         )),
+                        htmlOutput("tab2"),
                         textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "250px"),
                         actionButton("submit", "Submit", class = "btn-primary"),
                     )))
@@ -332,18 +383,14 @@ server <- function(input, output, session) {
   })
   
   output$tab1 <- renderUI({
-    tagList("URL link to the search engine:", url1)
+    #tagList("URL link to the search engine:", url1)
+    tags$iframe(src=url1, width=1100, height = 300)
   })
   output$tab2 <- renderUI({
-    tagList("URL link to the search engine:", url2)
+    #tagList("URL link to the search engine:", url2)
+    tags$iframe(src=url2, width=1100, height = 300)
   })
-  observeEvent(input$submit, {
-    if (input$submit > length(task_number)){
-    }
-    else{
-      saveData(formData())
-    }
-  })
+  
   output$timeleft <- renderText({
     paste("Time left:", minutes(), "M", seconds(), "S")
   })
