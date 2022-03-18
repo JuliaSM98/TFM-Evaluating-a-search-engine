@@ -1,29 +1,47 @@
 library(shiny)
+library(shinydashboard)
 
-members <- data.frame(name=c("Name 1", "Name 2"), nr=c('BCRA1','FITM2'))
+ui <- dashboardPage(
+  dashboardHeader(title = "Basic dashboard"),
+  dashboardSidebar(),
+  dashboardBody(
+    fluidRow(
+      box(width = 12,
+          HTML('<input type="text" id="count" name="count" style="display: none;"> '), 
+          HTML('
+          <style>
+            iframe{
+                width: 100%;
+                height: 600px;
+                border: 2px solid #ccc;
+            }
+          </style>
+          </head>
+          <body>
+              <script> 
+                var countStr = "count";
+                var changeStr = "change";
+                var countInput = document.getElementById(countStr);
+                countInput.value = -1;
+              </script>
+              <iframe src="https://elpais.com/" onLoad="var event = new Event(changeStr);countInput.value++;countInput.dispatchEvent(event)"></iframe>
 
-ui <- fluidPage(titlePanel("Getting Iframe"), 
-                sidebarLayout(
-                  sidebarPanel(
-                    fluidRow(
-                      column(6, selectInput("Member", label=h5("Choose a option"),choices=c('BCRA1','FITM2'))
-                      ))),
-                  mainPanel(fluidRow(
-                    htmlOutput("frame")
-                  )
-                  )
-                ))
+          </body>'),
+          #includeScript("example/get_user_id.js"), 
+          textOutput("view"),
+          actionButton("submit", "Submit", class = "btn-primary"),
+          
+          )
+    )
+  )
+)
 
 server <- function(input, output) {
-  # observe({ 
-  #   query <- members[which(members$nr==input$Member),2]
-  #   test <<- paste0("http://news.scibite.com/scibites/news.html?q=GENE$",query)
-  # })
-  output$frame <- renderUI({
-    # input$Member
-    my_test <- tags$iframe(height=600, width=535, url_link="http://news.scibite.com/scibites/news.html?q=GENE" )
-    my_test
-  })
+  
+    count <- reactive({ input$count }) 
+    output$view <- renderText( paste0( "User ID is: ",count()) ) 
+
 }
 
-shinyApp(ui, server)
+runApp(list(ui = ui, server = server), launch.browser = TRUE)
+

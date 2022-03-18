@@ -64,7 +64,7 @@ for (val in y) {
 ################################################################################
 
 # Main login screen
-loginpage <- div(id = "loginpage", style = "width: 500px; max-width: 100%; margin: 0 auto; padding: 20px;",
+loginpage <- div(id = "loginpage", style = "width: 50%; max-width: 100%; margin: 0 auto; padding: 20px;",
                  wellPanel(
                    tags$h2("LOG IN", class = "text-center", style = "padding-top: 0;color:#333; font-weight:600;"),
                    textInput("userName", placeholder="Username", label = tagList(icon("user"), "Username")),
@@ -383,12 +383,20 @@ server <- function(input, output, session) {
   })
   
   output$tab1 <- renderUI({
-    #tagList("URL link to the search engine:", url1)
-    tags$iframe(src=url1, width=1100, height = 300)
+    if (input$submit>0){
+      tags$iframe(src=url1, width="100%", height = 300)
+    }
+    else{
+      tags$iframe(src=url1, width="100%", height = 300)
+    }
   })
   output$tab2 <- renderUI({
-    #tagList("URL link to the search engine:", url2)
-    tags$iframe(src=url2, width=1100, height = 300)
+    if (input$submit>0){
+      tags$iframe(src=url2, width="100%", height = 300)
+    }
+    else{
+      tags$iframe(src=url2, width="100%", height = 300)
+    }
   })
   
   output$timeleft <- renderText({

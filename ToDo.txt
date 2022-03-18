@@ -1,16 +1,20 @@
 DONE:
-- el fichero de respuestas debe ser tvs para evitar problemas con lo que escribe el usuario (no se le puede pedir que evite usar comas o comillas) 
-- also instead of timestamp, we could divide output data by date and time/timestamp
-- Busca en el paper el link a los datos y/o cuestionarios.
-- Add to data output: time used in each task--> time format + seconds !!!
-
+- he econtrado las webs donde se supone que estan las tareas, pero estas si que no se pueden abrir, no hay copias pasadas. que hago?
 
 
 ToDo:
 - maybe the number of the task put it at the bottom right site 
+
 - He encontrado la tesis doctoral, habría que hacer un questionario sobre la edad y todo eso antes a los participantes?:
-age, gender, nationality, n* languages they know, course, experience with the engine 
-- mirar los frames para embutir sitios web en el frame, y poder monitorizar el número de cambios de página (y poco más te va a dejar monitorizar). --> añadir el cambio de paginas en el output
+age, gender, nationality, n* languages they know, course, experience with the engine -> Mirar quantitative.csv!
+
+- mirar los frames para embutir sitios web en el frame, y poder monitorizar el número de cambios de página (y poco más te va a dejar monitorizar). --> añadir el cambio de paginas en el output (me falta esto último)
+
+- usuario administrador(s). Que pueda crear usuarios/pass, ajustar parámetros de config (para no tener que editar el fichero de config a mano), y hacer análisis de lo que ha pasado→ en particular las gráficas de violín.
+
+- Pantalla de “splash” le cuenta al usuario de qué va el experimento. Cuando pulse OK, ya sabrá que está monitorizado y que cada tarea tiene un límite de tiempo. 
+
+
 
 
 
