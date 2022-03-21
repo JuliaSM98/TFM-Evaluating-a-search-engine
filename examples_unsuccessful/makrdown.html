@@ -25,4 +25,23 @@ You can also embed plots, for example:
 plot(pressure)
 ```
 
+How about markdowns:
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Detect Click into iFrame</title>
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<style>
+    iframe{
+        width: 100%;
+        height: 200px;
+        border: 2px solid #ccc;
+    }
+</style>
+</head>
+<body>
+    <iframe src="https://elpais.com/" onLoad="alert('Click detected inside iframe');"></iframe>
+</body>
+</html>
+
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

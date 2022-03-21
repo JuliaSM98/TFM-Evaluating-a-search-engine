@@ -27,7 +27,6 @@ ui <- dashboardPage(
               <iframe src="https://elpais.com/" onLoad="var event = new Event(changeStr);countInput.value++;countInput.dispatchEvent(event)"></iframe>
 
           </body>'),
-          #includeScript("example/get_user_id.js"), 
           textOutput("view"),
           actionButton("submit", "Submit", class = "btn-primary"),
           

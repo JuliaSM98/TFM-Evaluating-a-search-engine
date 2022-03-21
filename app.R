@@ -102,7 +102,7 @@ server <- function(input, output, session) {
   
   # To be changed 
   url1 = "https://elpais.com/"
-  url2 = "https://www.elmundo.es/"
+  # url2 = "https://www.elmundo.es/"
   
   # when login is false 
   login = FALSE
@@ -253,6 +253,7 @@ server <- function(input, output, session) {
       data <- c(data, timestamp = Time())
       data <- c(data, TimeToComplete = paste(m,s,sep=":"))
       data <- c(data, SecondsToComplete = m*60+s)
+      data <- c(data, pages = count())
       data <- c(data, task = task_number[input$submit])
       i<-match(input$userName,users$USER_NAME)
       data <- c(data, engine = users$Engine[i])
@@ -324,7 +325,28 @@ server <- function(input, output, session) {
                                  font-size: 20px;``
                                  }"
                       )),
-                      htmlOutput("tab1"),
+                      #htmlOutput("tab1"),
+                      HTML('<input type="text" id="count" name="count" style="display: none;"> '), 
+                      HTML('
+                            <style>
+                              iframe{
+                                  width: 100%;
+                                  height: 600px;
+                                  border: 2px solid #ccc;
+                              }
+                            </style>
+                            </head>
+                            <body>
+                                <script> 
+                                  var countStr = "count";
+                                  var changeStr = "change";
+                                  var countInput = document.getElementById(countStr);
+                                  countInput.value = -1;
+                                </script>
+                                <iframe src="https://elpais.com/" onLoad="var event = new Event(changeStr);countInput.value++;countInput.dispatchEvent(event)"></iframe>
+                  
+                            </body>'),
+                      textOutput("view1"),
                       textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "100px"),
                       actionButton("submit", "Submit", class = "btn-primary"),
                 )))
@@ -350,7 +372,28 @@ server <- function(input, output, session) {
                                  font-size: 20px;``
                                  }"
                         )),
-                        htmlOutput("tab2"),
+                        #htmlOutput("tab2"),
+                        HTML('<input type="text" id="count" name="count" style="display: none;"> '), 
+                        HTML('
+                            <style>
+                              iframe{
+                                  width: 100%;
+                                  height: 600px;
+                                  border: 2px solid #ccc;
+                              }
+                            </style>
+                            </head>
+                            <body>
+                                <script> 
+                                  var countStr = "count";
+                                  var changeStr = "change";
+                                  var countInput = document.getElementById(countStr);
+                                  countInput.value = -1;
+                                </script>
+                                <iframe src="https://www.elmundo.es/" onLoad="var event = new Event(changeStr);countInput.value++;countInput.dispatchEvent(event)"></iframe>
+                  
+                            </body>'),
+                        textOutput("view2"),
                         textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "250px"),
                         actionButton("submit", "Submit", class = "btn-primary"),
                     )))
@@ -382,22 +425,27 @@ server <- function(input, output, session) {
    
   })
   
-  output$tab1 <- renderUI({
-    if (input$submit>0){
-      tags$iframe(src=url1, width="100%", height = 300)
-    }
-    else{
-      tags$iframe(src=url1, width="100%", height = 300)
-    }
-  })
-  output$tab2 <- renderUI({
-    if (input$submit>0){
-      tags$iframe(src=url2, width="100%", height = 300)
-    }
-    else{
-      tags$iframe(src=url2, width="100%", height = 300)
-    }
-  })
+  # output$tab1 <- renderUI({
+  #   if (input$submit>0){
+  #     tags$iframe(src=url1, width="100%", height = 300)
+  #   }
+  #   else{
+  #     tags$iframe(src=url1, width="100%", height = 300)
+  #   }
+  # })
+  
+  count <- reactive({ input$count }) 
+  output$view1 <- renderText( paste0( "Number of clicks: ",count()) )
+  output$view2 <- renderText( paste0( "Number of clicks: ",count()) )
+  
+  # output$tab2 <- renderUI({
+  #   if (input$submit>0){
+  #     tags$iframe(src=url2, width="100%", height = 300)
+  #   }
+  #   else{
+  #     tags$iframe(src=url2, width="100%", height = 300)
+  #   }
+  # })
   
   output$timeleft <- renderText({
     paste("Time left:", minutes(), "M", seconds(), "S")
