@@ -325,28 +325,8 @@ server <- function(input, output, session) {
                                  font-size: 20px;``
                                  }"
                       )),
-                      #htmlOutput("tab1"),
-                      HTML('<input type="text" id="count" name="count" style="display: none;"> '), 
-                      HTML('
-                            <style>
-                              iframe{
-                                  width: 100%;
-                                  height: 600px;
-                                  border: 2px solid #ccc;
-                              }
-                            </style>
-                            </head>
-                            <body>
-                                <script> 
-                                  var countStr = "count";
-                                  var changeStr = "change";
-                                  var countInput = document.getElementById(countStr);
-                                  countInput.value = -1;
-                                </script>
-                                <iframe src="https://elpais.com/" onLoad="var event = new Event(changeStr);countInput.value++;countInput.dispatchEvent(event)"></iframe>
-                  
-                            </body>'),
-                      textOutput("view1"),
+                      htmlOutput("tab1"),
+                      #textOutput("view1"),
                       textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "100px"),
                       actionButton("submit", "Submit", class = "btn-primary"),
                 )))
@@ -372,29 +352,9 @@ server <- function(input, output, session) {
                                  font-size: 20px;``
                                  }"
                         )),
-                        #htmlOutput("tab2"),
-                        HTML('<input type="text" id="count" name="count" style="display: none;"> '), 
-                        HTML('
-                            <style>
-                              iframe{
-                                  width: 100%;
-                                  height: 600px;
-                                  border: 2px solid #ccc;
-                              }
-                            </style>
-                            </head>
-                            <body>
-                                <script> 
-                                  var countStr = "count";
-                                  var changeStr = "change";
-                                  var countInput = document.getElementById(countStr);
-                                  countInput.value = -1;
-                                </script>
-                                <iframe src="https://www.elmundo.es/" onLoad="var event = new Event(changeStr);countInput.value++;countInput.dispatchEvent(event)"></iframe>
-                  
-                            </body>'),
-                        textOutput("view2"),
-                        textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "250px"),
+                        htmlOutput("tab2"),
+                        #textOutput("view2"),
+                        textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "100px"),
                         actionButton("submit", "Submit", class = "btn-primary"),
                     )))
         }
@@ -434,9 +394,27 @@ server <- function(input, output, session) {
   #   }
   # })
   
+  
+  getPage<-function() {
+    return(includeHTML("www/iframe1.html"))
+  }
+  output$tab1<-renderUI({getPage()})
   count <- reactive({ input$count }) 
-  output$view1 <- renderText( paste0( "Number of clicks: ",count()) )
-  output$view2 <- renderText( paste0( "Number of clicks: ",count()) )
+  
+  observeEvent(input$submit,{
+    output$tab1<-renderUI({getPage()})
+    count <- reactive({ input$count }) 
+  })
+  getPage<-function() {
+    return(includeHTML("www/iframe2.html"))
+  }
+  output$tab2<-renderUI({getPage()})
+  count <- reactive({ input$count }) 
+  
+  observeEvent(input$submit,{
+    output$tab2<-renderUI({getPage()})
+    count <- reactive({ input$count }) 
+  })
   
   # output$tab2 <- renderUI({
   #   if (input$submit>0){

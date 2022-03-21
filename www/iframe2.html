@@ -1,0 +1,19 @@
+<input type="text" id="count" name="count" style="display: none;"> 
+  <style>
+    iframe{
+        width: 100%;
+        height: 600px;
+        border: 2px solid #ccc;
+    }
+  </style>
+  </head>
+  <body>
+      <script> 
+        var countStr = "count";
+        var changeStr = "change";
+        var countInput = document.getElementById(countStr);
+        countInput.value = -1;
+      </script>
+      <iframe src="https://www.elmundo.es/" onLoad="var event = new Event(changeStr);countInput.value++;countInput.dispatchEvent(event)"></iframe>
+
+  </body>

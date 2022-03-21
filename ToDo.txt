@@ -1,9 +1,13 @@
 DONE:
 - he econtrado las webs donde se supone que estan las tareas, pero estas si que no se pueden abrir, no hay copias pasadas. que hago?
-
+- numero de paginas iframe--> mejorar que se resete count e iframe cada vez que le das al submit
 
 ToDo:
-- numero de paginas iframe--> mejorar que se resete count e iframe cada vez que le das al submit. 
+
+- problemas iframe: 
+			---> el onload va muy lento y si le das a submit rapido no se actualiza el count!
+			---> count suma cuando cargas la pagina: mirar si puedo mirar cambios 
+			de url para ser más precisos con el count pages!
 
 - maybe the number of the task put it at the bottom right site 
 
