@@ -7,26 +7,6 @@ ui <- dashboardPage(
   dashboardBody(
     fluidRow(
       box(width = 12,
-          # HTML('<input type="text" id="count" name="count" style="display: none;"> '), 
-          # HTML('
-          # <style>
-          #   iframe{
-          #       width: 100%;
-          #       height: 600px;
-          #       border: 2px solid #ccc;
-          #   }
-          # </style>
-          # </head>
-          # <body>
-          #     <script> 
-          #       var countStr = "count";
-          #       var changeStr = "change";
-          #       var countInput = document.getElementById(countStr);
-          #       countInput.value = -1;
-          #     </script>
-          #     <iframe src="https://elpais.com/" onLoad="var event = new Event(changeStr);countInput.value++;countInput.dispatchEvent(event)"></iframe>
-          # 
-          # </body>'),
           htmlOutput("tab1"),
           textOutput("view"),
           actionButton("submit", "Submit", class = "btn-primary"),
@@ -39,16 +19,18 @@ ui <- dashboardPage(
 server <- function(input, output) {
   
   getPage<-function() {
-    return(includeHTML("iframe.html"))
+    return(includeHTML("www/iframe_test.html"))
   }
   output$tab1<-renderUI({getPage()})
   count <- reactive({ input$count }) 
-  output$view <- renderText( paste0( "User ID is: ",count()) )
+  clicks <- reactive({ input$click }) 
+  output$view <- renderText( paste0( "Number of loads: ",count()," and ", "Number of clicks: ",clicks()))
   
   observeEvent(input$submit,{
     output$tab1<-renderUI({getPage()})
     count <- reactive({ input$count }) 
-    output$view <- renderText( paste0( "User ID is: ",count()) )
+    clicks <- reactive({ input$click }) 
+    output$view <- renderText( paste0( "Number of loads: ",count(), " and ", "Number of clicks: ",clicks()))
   })
 
 }
