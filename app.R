@@ -141,8 +141,15 @@ server <- function(input, output, session) {
   })
   
   # Once the login becomes true 
+  splash = FALSE
+  PAGE <- reactiveValues(splash = splash)
   output$sidebarpanel <- renderUI({
-    if (USER$login == TRUE){ 
+    if (USER$login == TRUE & PAGE$splash == FALSE){ 
+      sidebarMenu(
+        menuItem("Description", tabName = "splash", icon = icon("th"))
+      )
+    }
+    else if (USER$login == TRUE & PAGE$splash == TRUE){
       sidebarMenu(
         menuItem("Task", tabName = "engine", icon = icon("th"))
       )
@@ -159,7 +166,7 @@ server <- function(input, output, session) {
   })
 
   ####### Define the time for each task and also the countdown message ########
-  if(isolate(USER$login) == TRUE){
+  if(isolate(USER$login) == TRUE & isolate(PAGE$splash)==TRUE){
     k <- isolate(input$submit)
   }
   else {
@@ -172,7 +179,7 @@ server <- function(input, output, session) {
   observe({
     invalidateLater(1000, session)
     isolate({
-      if (USER$login == TRUE & (minutes()>=0 & seconds()>=0)){
+      if (USER$login == TRUE & (minutes()>=0 & seconds()>=0) & PAGE$splash == TRUE){
         active(TRUE)
         if(active() & !(minutes()==0 & seconds()==0))
         {
@@ -196,14 +203,6 @@ server <- function(input, output, session) {
   })
   
   
-  # observeEvent(input$submit, {
-  #   if (input$submit > length(task_number)){
-  #   }
-  #   else{
-  #     saveData(formData())
-  #   }
-  # })
-  
   Timecomplete <- function(j){
     m<-minutes()-min[j]
     s<-seconds()-sec[j]
@@ -221,17 +220,6 @@ server <- function(input, output, session) {
   # define the form in which we want to save data
   fieldsAll <- c("userName","txt")
   responsesDir <- file.path("response/")
-  # formData <- reactive({
-  #   data <- sapply(fieldsAll, function(x) input[[x]])
-  #   data <- c(data, datestamp = Date())
-  #   data <- c(data, timestamp = Time())
-  #   data <- c(data, TimeToComplete = "hola")
-  #   data <- c(data, task = task_number[input$submit])
-  #   i<-match(input$userName,users$USER_NAME)
-  #   data <- c(data, engine = users$Engine[i])
-  #   data <- t(data)
-  #   data
-  # })
   
   observeEvent(input$submit, {
     i <- match(task_number[input$submit +1],task_description$TASK)
@@ -249,15 +237,22 @@ server <- function(input, output, session) {
     
     formData <- reactive({
       data <- sapply(fieldsAll, function(x) input[[x]])
-      data <- c(data, datestamp = Date())
-      data <- c(data, timestamp = Time())
+      data <- c(data, Datestamp = Date())
+      data <- c(data, Timestamp = Time())
       data <- c(data, TimeToComplete = paste(m,s,sep=":"))
       data <- c(data, SecondsToComplete = m*60+s)
-      data <- c(data, pages = count())
-      data <- c(data, clicks = clicks())
-      data <- c(data, task = task_number[input$submit])
+      data <- c(data, Pages = count())
+      data <- c(data, Clicks = clicks())
+      data <- c(data, Task = task_number[input$submit])
       i<-match(input$userName,users$USER_NAME)
-      data <- c(data, engine = users$Engine[i])
+      data <- c(data, Engine = users$Engine[i])
+      data <- c(data, Name = input$name)
+      data <- c(data, Age = input$age)
+      data <- c(data, Gender = input$gender)
+      data <- c(data, Nationality = input$nationality)
+      data <- c(data, Languages = input$Languages)
+      data <- c(data, Course = input$course)
+      data <- c(data, Experience = input$experience)
       data <- t(data)
       data
     })
@@ -304,8 +299,26 @@ server <- function(input, output, session) {
     if (USER$login == TRUE ) {
       i<-match(input$userName,users$USER_NAME)
       tabItems(
+        if (PAGE$splash == FALSE){
+        tabItem(tabName ="splash", class = "active",
+                fluidRow(
+                  h1("Evaluating a Search Engine"),
+                  h4("Explanation of the experiment, tasks and time of each task!"),
+                  box(width = 12,
+                        textInput("name", h3("Name"), value = ""), 
+                        textInput("age", h3("Age"), value = ""),
+                        selectInput("gender", h3("Select gender"), 
+                                    choices = list("Male" = 1, "Female" = 2,
+                                                   "Other" = 3), selected = 2),
+                        textInput("nationality", h3("Nationality"), value = ""),
+                        textInput("languages", h3("Number of lanuages you talk"), value = ""),
+                        textInput("course", h3("Current course"), value = ""),
+                        textInput("experience", h3("What kind of experience do you have with this kind of search engines"), value = ""),
+                        actionButton("start", "Start", class = "btn-primary"),
+                  )))}
+    else{
         if (users$Engine[i] == 1){
-        # First tab
+        # Second tab
         tabItem(tabName ="engine", class = "active",
                 fluidRow(
                   h1("Evaluating a Search Engine"),
@@ -358,7 +371,7 @@ server <- function(input, output, session) {
                         textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "100px"),
                         actionButton("submit", "Submit", class = "btn-primary"),
                     )))
-        }
+        }}
       )
       
     }
@@ -385,6 +398,11 @@ server <- function(input, output, session) {
     }
    
   })
+  
+  observeEvent(input$start,{
+    PAGE$splash <- TRUE 
+  })
+  
   
   
   getPage1<-function() {
