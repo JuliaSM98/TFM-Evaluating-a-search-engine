@@ -254,6 +254,7 @@ server <- function(input, output, session) {
       data <- c(data, TimeToComplete = paste(m,s,sep=":"))
       data <- c(data, SecondsToComplete = m*60+s)
       data <- c(data, pages = count())
+      data <- c(data, clicks = clicks())
       data <- c(data, task = task_number[input$submit])
       i<-match(input$userName,users$USER_NAME)
       data <- c(data, engine = users$Engine[i])
@@ -385,45 +386,32 @@ server <- function(input, output, session) {
    
   })
   
-  # output$tab1 <- renderUI({
-  #   if (input$submit>0){
-  #     tags$iframe(src=url1, width="100%", height = 300)
-  #   }
-  #   else{
-  #     tags$iframe(src=url1, width="100%", height = 300)
-  #   }
-  # })
   
-  
-  getPage<-function() {
+  getPage1<-function() {
     return(includeHTML("www/iframe1.html"))
   }
-  output$tab1<-renderUI({getPage()})
+  output$tab1<-renderUI({getPage1()})
   count <- reactive({ input$count }) 
   
   observeEvent(input$submit,{
-    output$tab1<-renderUI({getPage()})
+    output$tab1<-renderUI({getPage1()})
     count <- reactive({ input$count }) 
+    clicks <- reactive({ input$click }) 
   })
-  getPage<-function() {
+  
+  
+  getPage2<-function() {
     return(includeHTML("www/iframe2.html"))
   }
-  output$tab2<-renderUI({getPage()})
-  count <- reactive({ input$count }) 
+  output$tab2<-renderUI({getPage2()})
+  count <- reactive({ input$count })
+  clicks <- reactive({ input$click }) 
   
   observeEvent(input$submit,{
-    output$tab2<-renderUI({getPage()})
+    output$tab2<-renderUI({getPage2()})
     count <- reactive({ input$count }) 
+    clicks <- reactive({ input$click }) 
   })
-  
-  # output$tab2 <- renderUI({
-  #   if (input$submit>0){
-  #     tags$iframe(src=url2, width="100%", height = 300)
-  #   }
-  #   else{
-  #     tags$iframe(src=url2, width="100%", height = 300)
-  #   }
-  # })
   
   output$timeleft <- renderText({
     paste("Time left:", minutes(), "M", seconds(), "S")

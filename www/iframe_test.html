@@ -8,14 +8,17 @@
                 border: 2px solid #ccc;
             }
         </style>
-        <script> var countInput = -1;var clicksInput = 0; </script>
+        <script> 
+              var countInput = -1;
+              var clicksInput = 0; 
+        </script>
     </head>
     <body>
         <iframe id="ifr" src="https://elpais.com/" onLoad="doOnLoad()" ></iframe>
-        <script>            
+        <script>    
             function doOnLoad() { 
                 countInput++;
-                Shiny.onInputChange("count",countInput);
+                Shiny.setInputValue("count",countInput);
             }
             
 	    var clickIframe = window.setInterval(checkFocus, 100);
@@ -27,7 +30,7 @@
 		  	clicksInput++;
 		  	window.focus(); // The focus() method sets focus to a window!!
 		   }
-		   Shiny.onInputChange("click",clicksInput);
+		   Shiny.setInputValue("click",clicksInput);
 		}
 	    
 	    
