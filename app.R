@@ -313,13 +313,9 @@ server <- function(input, output, session) {
                         actionButton("questions", "Go to questionnaire", class = "btn-primary"),)}
                   else{
                     box(width = 12,
-                          textInput("age", h3("Age"), value = ""),
-                          selectInput("gender", h3("Select gender"), 
-                                      choices = list("Male" = 1, "Female" = 2,
-                                                     "Other" = 3), selected = 2),
-                          textInput("nationality", h3("Nationality"), value = ""),
-                          textInput("course", h3("Current course"), value = ""),
-                          textInput("experience", h3("What kind of experience do you have with this kind of search engines"), value = ""),
+                          # https://shiny.rstudio.com/articles/html-ui.html
+                          # puedo hacer lo mismo en html por el tema de que lo puedo cambiar en el usuario admin
+                          source("CSV_inputs/questionnaire.R", local=TRUE)$value,
                           div(actionButton("start", "Start", class = "btn-primary"), style="float:left"),
                           div(actionButton("back", "Back", class = "btn-primary"), style="float:right")
                       )}
