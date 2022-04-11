@@ -156,7 +156,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # If someone writes anwer and clicks submit, clear txt
+  # If someone writes an answer and clicks submit, clear txt
   observe({
     if (!is.null(input$submit)) {
       if(input$submit>0){
@@ -246,11 +246,9 @@ server <- function(input, output, session) {
       data <- c(data, Task = task_number[input$submit])
       i<-match(input$userName,users$USER_NAME)
       data <- c(data, Engine = users$Engine[i])
-      data <- c(data, Name = input$name)
       data <- c(data, Age = input$age)
       data <- c(data, Gender = input$gender)
       data <- c(data, Nationality = input$nationality)
-      data <- c(data, Languages = input$Languages)
       data <- c(data, Course = input$course)
       data <- c(data, Experience = input$experience)
       data <- t(data)
@@ -294,29 +292,39 @@ server <- function(input, output, session) {
   }
   
 
+  questions = reactiveVal(FALSE)
+  observeEvent(input$questions, {
+    questions(TRUE)
+  })
+  observeEvent(input$back, {
+    questions(FALSE)
+  })
   
   output$body <- renderUI({
     if (USER$login == TRUE ) {
       i<-match(input$userName,users$USER_NAME)
       tabItems(
-        if (PAGE$splash == FALSE){
+      if (PAGE$splash == FALSE ){
         tabItem(tabName ="splash", class = "active",
                 fluidRow(
-                  h1("Evaluating a Search Engine"),
-                  h4("Explanation of the experiment, tasks and time of each task!"),
-                  box(width = 12,
-                        textInput("name", h3("Name"), value = ""), 
-                        textInput("age", h3("Age"), value = ""),
-                        selectInput("gender", h3("Select gender"), 
-                                    choices = list("Male" = 1, "Female" = 2,
-                                                   "Other" = 3), selected = 2),
-                        textInput("nationality", h3("Nationality"), value = ""),
-                        textInput("languages", h3("Number of lanuages you talk"), value = ""),
-                        textInput("course", h3("Current course"), value = ""),
-                        textInput("experience", h3("What kind of experience do you have with this kind of search engines"), value = ""),
-                        actionButton("start", "Start", class = "btn-primary"),
-                  )))}
-    else{
+                  if (questions() == FALSE){
+                    box(width = 12,
+                        includeMarkdown("markdown.Rmd"),
+                        actionButton("questions", "Go to questionnaire", class = "btn-primary"),)}
+                  else{
+                    box(width = 12,
+                          textInput("age", h3("Age"), value = ""),
+                          selectInput("gender", h3("Select gender"), 
+                                      choices = list("Male" = 1, "Female" = 2,
+                                                     "Other" = 3), selected = 2),
+                          textInput("nationality", h3("Nationality"), value = ""),
+                          textInput("course", h3("Current course"), value = ""),
+                          textInput("experience", h3("What kind of experience do you have with this kind of search engines"), value = ""),
+                          div(actionButton("start", "Start", class = "btn-primary"), style="float:left"),
+                          div(actionButton("back", "Back", class = "btn-primary"), style="float:right")
+                      )}
+                  ))}
+      else{
         if (users$Engine[i] == 1){
         # Second tab
         tabItem(tabName ="engine", class = "active",

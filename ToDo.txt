@@ -1,9 +1,3 @@
-DONE:
-- Pantalla de “splash” le cuenta al usuario de qué va el experimento. Cuando pulse OK, ya sabrá que está monitorizado y que cada tarea tiene un límite de tiempo. 
-- He encontrado la tesis doctoral, habría que hacer un questionario sobre la edad y todo eso antes a los participantes?:
-age, gender, nationality, n* languages they know, course, experience with the engine -> Mirar quantitative.csv!
-
-
 ToDo:
 
 - problemas iframe: 
@@ -16,9 +10,3 @@ ToDo:
 
 
 - usuario administrador(s). Que pueda crear usuarios/pass, ajustar parámetros de config (para no tener que editar el fichero de config a mano), y hacer análisis de lo que ha pasado→ en particular las gráficas de violín.
-
-
-PEDIR:
-1) los search engines
-2) cuando se haran los experimentos?
-3) tengo que escribir el TFM y la app en ingles o español?
