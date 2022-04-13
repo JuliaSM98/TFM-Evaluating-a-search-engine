@@ -1,30 +1,35 @@
 library(shiny)
 library(DT)
-
-RV <- reactiveValues(data = mtcars)
-
-app <- shinyApp(
-  
-  
-  ui <- fluidPage(
-    DT::dataTableOutput("mytable"),
-    actionButton("do", "Click Me")
-  ),
-  
-  
-  server = function(input, output,session) {
-    
-    #Load the mtcars table into a dataTable
-    output$mytable = DT::renderDataTable({
-      RV$data
-    })
-    
-    #A test action button
-    observeEvent(input$do, {
-      RV$data$cyl <- RV$data$cyl * 10 
-    })   
-  }
-  
+library(dplyr)
+ui <- fluidPage(
+  titlePanel("Delete rows with DT"),
+  sidebarLayout(
+    sidebarPanel(
+      actionButton("deleteRows", "Delete Rows")
+    ),
+    mainPanel(
+      dataTableOutput("tableus")
+    )
+  )
 )
 
-runApp(app)
+df <- data.frame(x = 1:10, y = letters[1:10])
+
+server <- function(input, output) {
+  values <- reactiveValues(dfWorking = df)
+  
+  observeEvent(input$deleteRows,{
+    
+    if (!is.null(input$tableus_rows_selected)) {
+      
+      values$dfWorking <- values$dfWorking[-as.numeric(input$tableus_rows_selected),]
+    }
+  })
+  
+  output$tableus <- renderDataTable({
+    values$dfWorking
+  })
+  
+}
+
+shinyApp(ui, server)

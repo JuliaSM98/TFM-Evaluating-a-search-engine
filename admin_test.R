@@ -8,6 +8,7 @@ library(RSQLite)
 library(DBI)
 library(lubridate)
 library(tidyverse)
+library(DT)
 
 # How many days should sessions last?
 cookie_expiry <- 7
@@ -137,9 +138,24 @@ server <- function(input, output, session) {
     # new_row <- c('hola','cara','cola')
     # user_data(rbind(RV$data,new_row))
     #user_data(RV$data)
-    RV$data <- RV$data %>% add_row(USER_NAME = "hola", Password = "ciao")
+    name <- input$user_name
+    pass <- input$password
+    engine <- as.numeric(input$engine)
+    RV$data <- RV$data %>% add_row(USER_NAME = name, Password = pass, Engine = engine)
     #RV$data$cyl <- RV$data$cyl * 10 
   }) 
+  
+  observeEvent(input$delete_row, {
+    if (!is.null(input$usertable_rows_selected)) {
+      RV$data <- RV$data[-as.numeric(input$usertable_rows_selected),]
+      row.names(RV$data) <- NULL
+    }
+    
+  }) 
+  
+  
+  output$usertable <- renderDataTable(user_data(), options = list(scrollX = TRUE))
+  
   
   output$welcome <- renderText({
     req(credentials()$user_auth)
@@ -155,14 +171,19 @@ server <- function(input, output, session) {
         width = 12,
         tags$h2(glue("Your permission level is: {user_info()$permissions}.
                      You logged in at: {user_info()$login_time}.
-                     Your data is: {ifelse(user_info()$permissions == 'admin', 'Starwars', 'Storms')}.")),
+                     Your data is: {ifelse(user_info()$permissions == 'admin', 'Users Info', 'Nothing')}.")),
         box(
           width = NULL,
           status = "primary",
-          title = ifelse(user_info()$permissions == "admin", "Starwars Data", "Storms Data"), # ho diu a dalt de la taula
-          DT::renderDT(user_data(), options = list(scrollX = TRUE)),
-          #DT::dataTableOutput("mytable"),
-          actionButton("new_row", "Add new row")
+          #title = ifelse(user_info()$permissions == "admin", "Starwars Data", "Storms Data"), # ho diu a dalt de la taula
+          DT::dataTableOutput("usertable"),
+          #DT::renderDT(user_data(), options = list(scrollX = TRUE)),
+          textInput("user_name", "User Name"),
+          textInput('password','Password'),
+          selectInput("engine", ("Engine"),
+                      choices = list("1" = 1, "2" = 2), selected = 2),
+          actionButton("new_row", "Add new row"),
+          actionButton("delete_row","Delete a row"),
         )
       )
     )
