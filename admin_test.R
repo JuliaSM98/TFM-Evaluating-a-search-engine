@@ -7,6 +7,7 @@ library(shinyauthr)
 library(RSQLite)
 library(DBI)
 library(lubridate)
+library(tidyverse)
 
 # How many days should sessions last?
 cookie_expiry <- 7
@@ -99,7 +100,7 @@ server <- function(input, output, session) {
   
   observe({
     if (credentials()$user_auth) {
-      shinyjs::removeClass(selector = "body", class = "sidebar-collapse")
+      shinyjs::removeClass(selector = "body", class = "sidebar-collapse") # Esto hace que no haya side bar en el login
     } else {
       shinyjs::addClass(selector = "body", class = "sidebar-collapse")
     }
@@ -109,15 +110,36 @@ server <- function(input, output, session) {
     credentials()$info
   })
   
+  # Load Data
+  
+  users <- read.csv('CSV_inputs/users.csv')
+  RV <- reactiveValues(data = users)
+  
   user_data <- reactive({
     req(credentials()$user_auth)
     
     if (user_info()$permissions == "admin") {
-      dplyr::starwars[, 1:10]
+      #Load the mtcars table into a dataTable
+      #output$mytable = DT::renderDataTable({
+        RV$data
+      #})
+      
+      
+      #dplyr::starwars[, 1:10]
     } else if (user_info()$permissions == "standard") {
-      dplyr::storms[, 1:11]
+      RV$data
+      #dplyr::storms[, 1:11]
     }
   })
+  
+  #A test action button
+  observeEvent(input$new_row, {
+    # new_row <- c('hola','cara','cola')
+    # user_data(rbind(RV$data,new_row))
+    #user_data(RV$data)
+    RV$data <- RV$data %>% add_row(USER_NAME = "hola", Password = "ciao")
+    #RV$data$cyl <- RV$data$cyl * 10 
+  }) 
   
   output$welcome <- renderText({
     req(credentials()$user_auth)
@@ -137,8 +159,10 @@ server <- function(input, output, session) {
         box(
           width = NULL,
           status = "primary",
-          title = ifelse(user_info()$permissions == "admin", "Starwars Data", "Storms Data"),
-          DT::renderDT(user_data(), options = list(scrollX = TRUE))
+          title = ifelse(user_info()$permissions == "admin", "Starwars Data", "Storms Data"), # ho diu a dalt de la taula
+          DT::renderDT(user_data(), options = list(scrollX = TRUE)),
+          #DT::dataTableOutput("mytable"),
+          actionButton("new_row", "Add new row")
         )
       )
     )

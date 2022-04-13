@@ -151,7 +151,10 @@ server <- function(input, output, session) {
     }
     else if (USER$login == TRUE & PAGE$splash == TRUE){
       sidebarMenu(
-        menuItem("Task", tabName = "engine", icon = icon("th"))
+        menuItem("Task", tabName = "engine", icon = icon("th")),
+        if (input$userName == "admin"){
+          menuItem("Config", tabName = "config", icon = icon("dashboard"))
+        }
       )
     }
   })
@@ -303,7 +306,6 @@ server <- function(input, output, session) {
   output$body <- renderUI({
     if (USER$login == TRUE ) {
       i<-match(input$userName,users$USER_NAME)
-      tabItems(
       if (PAGE$splash == FALSE ){
         tabItem(tabName ="splash", class = "active",
                 fluidRow(
@@ -322,32 +324,37 @@ server <- function(input, output, session) {
                   ))}
       else{
         if (users$Engine[i] == 1){
-        # Second tab
-        tabItem(tabName ="engine", class = "active",
-                fluidRow(
-                  h1("Evaluating a Search Engine"),
-                  box(width = 12, 
-                      textOutput("task"),
-                      tags$head(tags$style("#task{color: black;
-                                 font-size: 26px;
-                                 font-style: bold;
-                                 }"
-                      )),
-                      textOutput("descrip"),
-                      tags$head(tags$style("#descrip{color: black;
-                                 font-size: 20px;``
-                                 }"
-                      )),
-                      textOutput('timeleft'),
-                      tags$head(tags$style("#timeleft{color: red;
-                                 font-size: 20px;``
-                                 }"
-                      )),
-                      htmlOutput("tab1"),
-                      #textOutput("view1"),
-                      textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "100px"),
-                      actionButton("submit", "Submit", class = "btn-primary"),
-                )))
+        tabItems(
+          tabItem(tabName ="engine", class = "active",
+                  fluidRow(
+                    h1("Evaluating a Search Engine"),
+                    box(width = 12, 
+                        textOutput("task"),
+                        tags$head(tags$style("#task{color: black;
+                                   font-size: 26px;
+                                   font-style: bold;
+                                   }"
+                        )),
+                        textOutput("descrip"),
+                        tags$head(tags$style("#descrip{color: black;
+                                   font-size: 20px;``
+                                   }"
+                        )),
+                        textOutput('timeleft'),
+                        tags$head(tags$style("#timeleft{color: red;
+                                   font-size: 20px;``
+                                   }"
+                        )),
+                        htmlOutput("tab1"),
+                        #textOutput("view1"),
+                        textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "100px"),
+                        actionButton("submit", "Submit", class = "btn-primary"),
+                  ))),
+         tabItem(tabName ="config", class = "active",
+                    fluidRow( 
+                      
+                      
+                    )))
           }
         else{
           tabItem(tabName = "engine", class ="active",
@@ -376,7 +383,6 @@ server <- function(input, output, session) {
                         actionButton("submit", "Submit", class = "btn-primary"),
                     )))
         }}
-      )
       
     }
     else {
