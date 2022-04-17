@@ -7,7 +7,11 @@ library(sodium)
 library(lubridate)
 library(stringr)
 library(base)
-
+library(glue)
+#library(shinyauthr)
+library(RSQLite)
+library(DBI)
+library(tidyverse)
 
 # Mandatory to write somethings in the text boxes! This way the red asterisk will appear 
 fieldsMandatory <- c("txt") 
@@ -133,9 +137,9 @@ server <- function(input, output, session) {
   
   output$logoutbtn <- renderUI({
     req(USER$login)
-    tags$li(a("Logout", 
+    tags$li(a("Logout",
               href="javascript:window.location.reload(true)"),
-            class = "dropdown", 
+            class = "dropdown",
             style = "background-color: #eee !important; border: 0;
                     font-weight: bold; margin:5px; padding: 10px;")
   })
@@ -153,7 +157,7 @@ server <- function(input, output, session) {
       sidebarMenu(
         menuItem("Task", tabName = "engine", icon = icon("th")),
         if (input$userName == "admin"){
-          menuItem("Config", tabName = "config", icon = icon("dashboard"))
+          menuItem("Config", tabName = "config", icon = icon("th"))
         }
       )
     }
@@ -303,6 +307,57 @@ server <- function(input, output, session) {
     questions(FALSE)
   })
   
+  # Load Data
+  RV <- reactiveValues(data = users)
+  user_data <- reactive({
+    #req(credentials()$user_auth)
+    
+    if (input$userName == "admin") {
+      #Load the mtcars table into a dataTable
+      #output$mytable = DT::renderDataTable({
+      RV$data
+      #})
+      
+      
+      #dplyr::starwars[, 1:10]
+    } else if (user_info()$permissions == "standard") {
+      RV$data
+      #dplyr::storms[, 1:11]
+    }
+  })
+  
+  #A test action button
+  observeEvent(input$new_row, {
+    # new_row <- c('hola','cara','cola')
+    # user_data(rbind(RV$data,new_row))
+    #user_data(RV$data)
+    if (input$userName == "admin") {
+      name <- input$user_name
+      pass <- input$password
+      engine <- as.numeric(input$engine)
+      RV$data <- RV$data %>% add_row(USER_NAME = name, Password = pass, Engine = engine)
+      userDir <- "CSV_inputs/"
+      write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
+                  row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+    }
+  }) 
+  
+  observeEvent(input$delete_row, {
+    if (input$userName == "admin"){
+      if (!is.null(input$usertable_rows_selected)) {
+        RV$data <- RV$data[-as.numeric(input$usertable_rows_selected),]
+        row.names(RV$data) <- NULL
+        userDir <- "CSV_inputs/"
+        write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
+                    row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+      }}
+    
+  }) 
+  
+  
+  output$usertable <- renderDataTable(user_data(), options = list(scrollX = TRUE))
+  
+  
   output$body <- renderUI({
     if (USER$login == TRUE ) {
       i<-match(input$userName,users$USER_NAME)
@@ -352,6 +407,19 @@ server <- function(input, output, session) {
                   ))),
          tabItem(tabName ="config", class = "active",
                     fluidRow( 
+                      box(
+                        width = NULL,
+                        status = "primary",
+                        #title = ifelse(user_info()$permissions == "admin", "Starwars Data", "Storms Data"), # ho diu a dalt de la taula
+                        DT::dataTableOutput("usertable"),
+                        #DT::renderDT(user_data(), options = list(scrollX = TRUE)),
+                        textInput("user_name", "User Name"),
+                        textInput('password','Password'),
+                        selectInput("engine", ("Engine"),
+                                    choices = list("1" = 1, "2" = 2), selected = 2),
+                        actionButton("new_row", "Add new row"),
+                        actionButton("delete_row","Delete a row"),
+                      )
                       
                       
                     )))

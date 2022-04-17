@@ -138,18 +138,21 @@ server <- function(input, output, session) {
     # new_row <- c('hola','cara','cola')
     # user_data(rbind(RV$data,new_row))
     #user_data(RV$data)
-    name <- input$user_name
-    pass <- input$password
-    engine <- as.numeric(input$engine)
-    RV$data <- RV$data %>% add_row(USER_NAME = name, Password = pass, Engine = engine)
-    #RV$data$cyl <- RV$data$cyl * 10 
+    if (user_info()$permissions == "admin") {
+      name <- input$user_name
+      pass <- input$password
+      engine <- as.numeric(input$engine)
+      RV$data <- RV$data %>% add_row(USER_NAME = name, Password = pass, Engine = engine)
+      #RV$data$cyl <- RV$data$cyl * 10 
+    }
   }) 
   
   observeEvent(input$delete_row, {
-    if (!is.null(input$usertable_rows_selected)) {
-      RV$data <- RV$data[-as.numeric(input$usertable_rows_selected),]
-      row.names(RV$data) <- NULL
-    }
+    if (user_info()$permissions == "admin"){
+      if (!is.null(input$usertable_rows_selected)) {
+        RV$data <- RV$data[-as.numeric(input$usertable_rows_selected),]
+        row.names(RV$data) <- NULL
+    }}
     
   }) 
   
