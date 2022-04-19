@@ -320,8 +320,8 @@ server <- function(input, output, session) {
       
       
       #dplyr::starwars[, 1:10]
-    } else if (user_info()$permissions == "standard") {
-      RV$data
+    } else {
+      #RV$data
       #dplyr::storms[, 1:11]
     }
   })
@@ -422,7 +422,8 @@ server <- function(input, output, session) {
                       )
                       
                       
-                    )))
+                    ))
+         )
           }
         else{
           tabItem(tabName = "engine", class ="active",
