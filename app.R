@@ -43,7 +43,7 @@ server <- function(input, output, session) {
   
   # read configuration files
   
-  task_description <- read.csv('CSV_inputs/tasks_descrip.csv')
+  task_description <- read.csv('CSV_inputs/tasksdescrip.csv')
   users <- read.csv('CSV_inputs/users.csv')
   
   
@@ -315,17 +315,23 @@ server <- function(input, output, session) {
   
   #A test action button
   observeEvent(input$new_row, {
-    print(input$tabs)
+
     if (input$userName == "admin") {
+      userDir <- "CSV_inputs/"
       if (input$tabs =="Users"){
         name <- input$uname
         pass <- input$passs
         engine <- as.numeric(input$eng)
         RV$data <- RV$data %>% add_row(USER_NAME = name, Password = pass, Engine = engine)
-        userDir <- "CSV_inputs/"
         write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
                     row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")}
       else if (input$tabs == "Task Consfiguration"){
+        RV$tasks <- RV$tasks %>% add_row(TASK = input$TASK, DESCRIPTION= input$DESCRIPTION,
+                                                 TIME_MIN_SEC = input$TIME_MIN_SEC,
+                                                 COUNTDOWN_MESSAGE = input$COUNTDOWN_MESSAGE)
+        write.table(x = RV$tasks, file = file.path(userDir, 'tasksdescrip.csv'), append = FALSE,
+                    row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+        
         
       }
       else if (input$tabs == "Questionaire"){
@@ -336,14 +342,26 @@ server <- function(input, output, session) {
   }) 
   
   observeEvent(input$delete_row, {
+    userDir <- "CSV_inputs/"
     if (input$userName == "admin"){
       if (!is.null(input$usertable_rows_selected)) {
-        RV$data <- RV$data[-as.numeric(input$usertable_rows_selected),]
-        row.names(RV$data) <- NULL
-        userDir <- "CSV_inputs/"
-        write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
-                    row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
-      }}
+        if (input$tabs =="Users"){
+          RV$data <- RV$data[-as.numeric(input$usertable_rows_selected),]
+          row.names(RV$data) <- NULL
+          write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
+                      row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")}}
+      if(!is.null(input$tasktable_rows_selected)){
+        if (input$tabs == "Task Consfiguration"){
+          RV$tasks <- RV$tasks[-as.numeric(input$tasktable_rows_selected),]
+          row.names(RV$tasks) <- NULL
+          write.table(x = RV$tasks, file = file.path(userDir, "tasksdescrip.csv"), append = FALSE,
+                      row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+        }}
+        else if (input$tabs == "Questionaire"){
+          
+        }
+        
+      }
     
   }) 
   
