@@ -46,9 +46,6 @@ server <- function(input, output, session) {
   task_description <- read.csv('CSV_inputs/tasks_descrip.csv')
   users <- read.csv('CSV_inputs/users.csv')
   
-  reader <- reactiveFileReader(intervalMillis = 1000, session, filePath = 
-                                 "CSV_inputs/users.csv", readFunc = read.csv)
-  
   
   ##################### Information to extract from csv's ########################
   user_name <- c()
@@ -152,6 +149,9 @@ server <- function(input, output, session) {
     if (USER$login == TRUE & PAGE$splash == FALSE){ 
       sidebarMenu(
         menuItem("Description", tabName = "splash", icon = icon("th"))
+        # if (input$userName == "admin"){
+        #   menuItem("Config", tabName = "config", icon = icon("th"))
+        # }
       )
     }
     else if (USER$login == TRUE & PAGE$splash == TRUE){
@@ -299,7 +299,7 @@ server <- function(input, output, session) {
     }
   }
   
-
+# go back and forth questionnaire
   questions = reactiveVal(FALSE)
   observeEvent(input$questions, {
     questions(TRUE)
@@ -309,24 +309,29 @@ server <- function(input, output, session) {
   })
   
   # Load Data
-  RV <- reactiveValues(data = users)
-  user_data <- reactive({
-    
-    if (input$userName == "admin") {
-      RV$data
-    } 
-  })
+  RV <- reactiveValues(data = users, tasks = task_description )
+  user_data <- reactive({ RV$data})
+  t_descrip <- reactive({RV$tasks})
   
   #A test action button
   observeEvent(input$new_row, {
+    print(input$tabs)
     if (input$userName == "admin") {
-      name <- input$uname
-      pass <- input$passs
-      engine <- as.numeric(input$eng)
-      RV$data <- RV$data %>% add_row(USER_NAME = name, Password = pass, Engine = engine)
-      userDir <- "CSV_inputs/"
-      write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
-                  row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+      if (input$tabs =="Users"){
+        name <- input$uname
+        pass <- input$passs
+        engine <- as.numeric(input$eng)
+        RV$data <- RV$data %>% add_row(USER_NAME = name, Password = pass, Engine = engine)
+        userDir <- "CSV_inputs/"
+        write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
+                    row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")}
+      else if (input$tabs == "Task Consfiguration"){
+        
+      }
+      else if (input$tabs == "Questionaire"){
+        
+      }
+      
     }
   }) 
   
@@ -344,6 +349,7 @@ server <- function(input, output, session) {
   
   
   output$usertable <- renderDataTable(user_data(), options = list(scrollX = TRUE))
+  output$tasktable <- renderDataTable(t_descrip(), options = list(scrollX = TRUE))
   
   
   output$body <- renderUI({
@@ -394,7 +400,8 @@ server <- function(input, output, session) {
                           actionButton("submit", "Submit", class = "btn-primary"),
                       ))),
             tabItem(tabName ="config",
-                    tabsetPanel(type = "tabs",
+                    tabsetPanel(type = "tabs", id = "tabs", footer = list(actionButton("new_row", "Add new row"),
+                                                                          actionButton("delete_row","Delete a row")),
                                 tabPanel("Users", 
                                          box(
                                            width = NULL,
@@ -404,12 +411,33 @@ server <- function(input, output, session) {
                                            textInput('passs','Password'),
                                            selectInput("eng", ("Engine"),
                                                        choices = list("1" = 1, "2" = 2), selected = 2),
-                                           actionButton("new_row", "Add new row"),
-                                           actionButton("delete_row","Delete a row"),
+                                           # actionButton("new_row", "Add new row"),
+                                           # actionButton("delete_row","Delete a row"),
                                          )
                                          ),
-                                tabPanel("Task Consfiguration", ),
-                                tabPanel("Questionaire", )
+                                tabPanel("Task Consfiguration", 
+                                         box(
+                                           width = NULL,
+                                           status = "primary",
+                                           DT::dataTableOutput("tasktable"),
+                                           textInput("TASK", "Task number"),
+                                           textInput("DESCRIPTION", 'Task description'),
+                                           textInput('TIME_MIN_SEC','Time in minutes and seconds'),
+                                           textInput('COUNTDOWN_MESSAGE','Countdown Message'),
+                                           # actionButton("new_row", "Add new row"),
+                                           # actionButton("delete_row","Delete a row"),
+                                         )
+                                         
+                                         
+                                         ),
+                                tabPanel("Questionaire",
+                                         box(
+                                           width = NULL,
+                                           status = "primary",
+                                           # actionButton("new_row", "Add new row"),
+                                           # actionButton("delete_row","Delete a row"),
+                                         )
+                                         )
                     )
                     )
           )

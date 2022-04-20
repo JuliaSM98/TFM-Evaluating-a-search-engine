@@ -12,9 +12,6 @@ ToDo:
 - usuario administrador(s). Que pueda crear usuarios/pass, ajustar parámetros de config (para no tener que editar el fichero de config a mano), y hacer análisis de lo que ha pasado→ en particular las gráficas de violín.
 
 
-
-- conseguir leer de admin!!! (bueno tengo que hacer que el csv se vuelva a leer cuando lo renuevo!!)
-https://stackoverflow.com/questions/52877108/using-reactivefilereader-in-shiny-app-to-update-a-dataframe-upon-change-to-under
 - El fichero este csv estara colgado en internet con shiny studio  no???
 
 
