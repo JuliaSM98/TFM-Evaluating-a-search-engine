@@ -13,86 +13,8 @@ library(RSQLite)
 library(DBI)
 library(tidyverse)
 
-# Mandatory to write somethings in the text boxes! This way the red asterisk will appear 
-fieldsMandatory <- c("txt") 
-
-# We define Date and Time, too know at which date and at which time the subject pressed submit
-Date <- function() format(Sys.time(), "%Y-%m-%d")
-Time <-function() format(Sys.time(), "%H:%M:%OS")
-#humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
-
-# definition of the red star
-labelMandatory <- function(label) {
-  tagList(
-    label,
-    span("*", class = "mandatory_star")
-  )
-}
 appCSS <- ".mandatory_star { color: red; }
            } "
-
-# read configuration files
-task_description <- read.csv('CSV_inputs/tasks_descrip.csv')
-users <- read.csv('CSV_inputs/users.csv')
-
-##################### Information to extract from csv's ########################
-user_name <- c()
-x = c(1:length(users$USER_NAME))
-for (val in x) {
-  user_name<- append(user_name, toString((users$USER_NAME)[val]))
-}
-
-pass<-c()
-for (val in x) {
-  pass<- append(pass, toString((users$Password)[val]))
-}
-
-
-task_number <- c()
-y = c(1:length(task_description$TASK))
-for (val in y) {
-  task_number<- append(task_number, toString((task_description$TASK)[val]))
-}
-task_des <- c()
-for (val in y) {
-  task_des<- append(task_des, toString((task_description$DESCRIPTION)[val]))
-}
-
-min <- c()
-sec <- c()
-for (val in y) {
-  t <- (str_split((task_description$TIME_MIN_SEC)[val],":"))
-  min <- append(min, as.integer(sapply(t,"[[",1)))
-  sec <- append(sec, as.integer(sapply(t,"[[",2)))
-}
-################################################################################
-
-# Main login screen
-loginpage <- div(id = "loginpage", style = "width: 50%; max-width: 100%; margin: 0 auto; padding: 20px;",
-                 wellPanel(
-                   tags$h2("LOG IN", class = "text-center", style = "padding-top: 0;color:#333; font-weight:600;"),
-                   textInput("userName", placeholder="Username", label = tagList(icon("user"), "Username")),
-                   passwordInput("passwd", placeholder="Password", label = tagList(icon("unlock-alt"), "Password")),
-                   br(),
-                   div(
-                     style = "text-align: center;",
-                     actionButton("login", "SIGN IN", style = "color: white; background-color:#3c8dbc;
-                                 padding: 10px 15px; width: 150px; cursor: pointer;
-                                 font-size: 18px; font-weight: 600;"),
-                     shinyjs::hidden(
-                       div(id = "nomatch",
-                           tags$p("Oops! Incorrect username or password!",
-                                  style = "color: red; font-weight: 600; 
-                                            padding-top: 5px;font-size:16px;", 
-                                  class = "text-center"))),
-                   ))
-)
-
-credentials = data.frame(
-  username_id = user_name,
-  passod   = sapply(pass,password_store),
-  stringsAsFactors = F
-)
 
 header <- dashboardHeader( title = "Welcome", uiOutput("logoutbtn"))
 
@@ -103,10 +25,89 @@ ui<-dashboardPage(header, sidebar, body, skin = "blue")
 
 # Server function 
 server <- function(input, output, session) {
+  # Mandatory to write somethings in the text boxes! This way the red asterisk will appear 
+  fieldsMandatory <- c("txt") 
   
-  # To be changed 
-  url1 = "https://elpais.com/"
-  # url2 = "https://www.elmundo.es/"
+  # We define Date and Time, too know at which date and at which time the subject pressed submit
+  Date <- function() format(Sys.time(), "%Y-%m-%d")
+  Time <-function() format(Sys.time(), "%H:%M:%OS")
+  #humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
+  
+  # definition of the red star
+  labelMandatory <- function(label) {
+    tagList(
+      label,
+      span("*", class = "mandatory_star")
+    )
+  }
+  
+  # read configuration files
+  
+  task_description <- read.csv('CSV_inputs/tasks_descrip.csv')
+  users <- read.csv('CSV_inputs/users.csv')
+  
+  reader <- reactiveFileReader(intervalMillis = 1000, session, filePath = 
+                                 "CSV_inputs/users.csv", readFunc = read.csv)
+  
+  
+  ##################### Information to extract from csv's ########################
+  user_name <- c()
+  x = c(1:length(users$USER_NAME))
+  for (val in x) {
+    user_name<- append(user_name, toString((users$USER_NAME)[val]))
+  }
+  
+  pass<-c()
+  for (val in x) {
+    pass<- append(pass, toString((users$Password)[val]))
+  }
+  
+  
+  task_number <- c()
+  y = c(1:length(task_description$TASK))
+  for (val in y) {
+    task_number<- append(task_number, toString((task_description$TASK)[val]))
+  }
+  task_des <- c()
+  for (val in y) {
+    task_des<- append(task_des, toString((task_description$DESCRIPTION)[val]))
+  }
+  
+  min <- c()
+  sec <- c()
+  for (val in y) {
+    t <- (str_split((task_description$TIME_MIN_SEC)[val],":"))
+    min <- append(min, as.integer(sapply(t,"[[",1)))
+    sec <- append(sec, as.integer(sapply(t,"[[",2)))
+  }
+  credentials = data.frame(
+    username_id = user_name,
+    passod   = sapply(pass,password_store),
+    stringsAsFactors = F
+  )
+  ################################################################################
+  
+  # Main login screen
+  loginpage <- div(id = "loginpage", style = "width: 50%; max-width: 100%; margin: 0 auto; padding: 20px;",
+                   wellPanel(
+                     tags$h2("LOG IN", class = "text-center", style = "padding-top: 0;color:#333; font-weight:600;"),
+                     textInput("userName", placeholder="Username", label = tagList(icon("user"), "Username")),
+                     passwordInput("passwd", placeholder="Password", label = tagList(icon("unlock-alt"), "Password")),
+                     br(),
+                     div(
+                       style = "text-align: center;",
+                       actionButton("login", "SIGN IN", style = "color: white; background-color:#3c8dbc;
+                                 padding: 10px 15px; width: 150px; cursor: pointer;
+                                 font-size: 18px; font-weight: 600;"),
+                       shinyjs::hidden(
+                         div(id = "nomatch",
+                             tags$p("Oops! Incorrect username or password!",
+                                    style = "color: red; font-weight: 600; 
+                                            padding-top: 5px;font-size:16px;", 
+                                    class = "text-center"))),
+                     ))
+  )
+  
   
   # when login is false 
   login = FALSE
@@ -310,31 +311,18 @@ server <- function(input, output, session) {
   # Load Data
   RV <- reactiveValues(data = users)
   user_data <- reactive({
-    #req(credentials()$user_auth)
     
     if (input$userName == "admin") {
-      #Load the mtcars table into a dataTable
-      #output$mytable = DT::renderDataTable({
       RV$data
-      #})
-      
-      
-      #dplyr::starwars[, 1:10]
-    } else {
-      #RV$data
-      #dplyr::storms[, 1:11]
-    }
+    } 
   })
   
   #A test action button
   observeEvent(input$new_row, {
-    # new_row <- c('hola','cara','cola')
-    # user_data(rbind(RV$data,new_row))
-    #user_data(RV$data)
     if (input$userName == "admin") {
-      name <- input$user_name
-      pass <- input$password
-      engine <- as.numeric(input$engine)
+      name <- input$uname
+      pass <- input$passs
+      engine <- as.numeric(input$eng)
       RV$data <- RV$data %>% add_row(USER_NAME = name, Password = pass, Engine = engine)
       userDir <- "CSV_inputs/"
       write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
@@ -361,6 +349,7 @@ server <- function(input, output, session) {
   output$body <- renderUI({
     if (USER$login == TRUE ) {
       i<-match(input$userName,users$USER_NAME)
+      num_engine <- paste("tab",users$Engine[i],sep="")
       if (PAGE$splash == FALSE ){
         tabItem(tabName ="splash", class = "active",
                 fluidRow(
@@ -378,7 +367,56 @@ server <- function(input, output, session) {
                       )}
                   ))}
       else{
-        if (users$Engine[i] == 1){
+        if (input$userName == "admin"){
+          tabItems(
+            tabItem(tabName ="engine", class = "active",
+                    fluidRow(
+                      h1("Evaluating a Search Engine"),
+                      box(width = 12, 
+                          textOutput("task"),
+                          tags$head(tags$style("#task{color: black;
+                                   font-size: 26px;
+                                   font-style: bold;
+                                   }"
+                          )),
+                          textOutput("descrip"),
+                          tags$head(tags$style("#descrip{color: black;
+                                   font-size: 20px;``
+                                   }"
+                          )),
+                          textOutput('timeleft'),
+                          tags$head(tags$style("#timeleft{color: red;
+                                   font-size: 20px;``
+                                   }"
+                          )),
+                          htmlOutput(num_engine),
+                          textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "100px"),
+                          actionButton("submit", "Submit", class = "btn-primary"),
+                      ))),
+            tabItem(tabName ="config",
+                    tabsetPanel(type = "tabs",
+                                tabPanel("Users", 
+                                         box(
+                                           width = NULL,
+                                           status = "primary",
+                                           DT::dataTableOutput("usertable"),
+                                           textInput("uname", "User Name"),
+                                           textInput('passs','Password'),
+                                           selectInput("eng", ("Engine"),
+                                                       choices = list("1" = 1, "2" = 2), selected = 2),
+                                           actionButton("new_row", "Add new row"),
+                                           actionButton("delete_row","Delete a row"),
+                                         )
+                                         ),
+                                tabPanel("Task Consfiguration", ),
+                                tabPanel("Questionaire", )
+                    )
+                    )
+          )
+          
+        }
+        
+        else {
         tabItems(
           tabItem(tabName ="engine", class = "active",
                   fluidRow(
@@ -400,58 +438,13 @@ server <- function(input, output, session) {
                                    font-size: 20px;``
                                    }"
                         )),
-                        htmlOutput("tab1"),
-                        #textOutput("view1"),
+                        htmlOutput(num_engine),
                         textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "100px"),
                         actionButton("submit", "Submit", class = "btn-primary"),
-                  ))),
-         tabItem(tabName ="config", class = "active",
-                    fluidRow( 
-                      box(
-                        width = NULL,
-                        status = "primary",
-                        #title = ifelse(user_info()$permissions == "admin", "Starwars Data", "Storms Data"), # ho diu a dalt de la taula
-                        DT::dataTableOutput("usertable"),
-                        #DT::renderDT(user_data(), options = list(scrollX = TRUE)),
-                        textInput("user_name", "User Name"),
-                        textInput('password','Password'),
-                        selectInput("engine", ("Engine"),
-                                    choices = list("1" = 1, "2" = 2), selected = 2),
-                        actionButton("new_row", "Add new row"),
-                        actionButton("delete_row","Delete a row"),
-                      )
-                      
-                      
-                    ))
+                  )))
          )
           }
-        else{
-          tabItem(tabName = "engine", class ="active",
-                  fluidRow(
-                    h1("Evaluating a Search Engine"),
-                    box(width = 12, 
-                        textOutput("task"),
-                        tags$head(tags$style("#task{color: black;
-                                 font-size: 26px;
-                                 font-style: bold;
-                                 }"
-                        )),
-                        textOutput("descrip"),
-                        tags$head(tags$style("#descrip{color: black;
-                                 font-size: 20px;``
-                                 }"
-                        )),
-                        textOutput('timeleft'),
-                        tags$head(tags$style("#timeleft{color: red;
-                                 font-size: 20px;``
-                                 }"
-                        )),
-                        htmlOutput("tab2"),
-                        #textOutput("view2"),
-                        textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "100px"),
-                        actionButton("submit", "Submit", class = "btn-primary"),
-                    )))
-        }}
+        }
       
     }
     else {
