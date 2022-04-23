@@ -1,4 +1,3 @@
-# revise if i need all the libraries
 library(shiny)
 library(shinyjs)
 library(shinydashboard)
@@ -12,19 +11,9 @@ library(glue)
 library(RSQLite)
 library(DBI)
 library(tidyverse)
+library(markdown)
 
-appCSS <- ".mandatory_star { color: red; }
-           } "
-
-header <- dashboardHeader( title = "Welcome", uiOutput("logoutbtn"))
-
-sidebar <- dashboardSidebar(uiOutput("sidebarpanel")) 
-body <- dashboardBody(shinyjs::useShinyjs(), shinyjs::inlineCSS(appCSS), uiOutput("body"))
-ui<-dashboardPage(header, sidebar, body, skin = "blue")
-
-
-# Server function 
-server <- function(input, output, session) {
+function(input, output, session) {
   # Mandatory to write somethings in the text boxes! This way the red asterisk will appear 
   fieldsMandatory <- c("txt") 
   
@@ -172,7 +161,7 @@ server <- function(input, output, session) {
       }
     }
   })
-
+  
   ####### Define the time for each task and also the countdown message ########
   if(isolate(USER$login) == TRUE & isolate(PAGE$splash)==TRUE){
     k <- isolate(input$submit)
@@ -299,7 +288,7 @@ server <- function(input, output, session) {
     }
   }
   
-# go back and forth questionnaire
+  # go back and forth questionnaire
   questions = reactiveVal(FALSE)
   observeEvent(input$questions, {
     questions(TRUE)
@@ -315,7 +304,7 @@ server <- function(input, output, session) {
   
   #A test action button
   observeEvent(input$new_row, {
-
+    
     if (input$userName == "admin") {
       userDir <- "CSV_inputs/"
       if (input$tabs =="Users"){
@@ -327,8 +316,8 @@ server <- function(input, output, session) {
                     row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")}
       else if (input$tabs == "Task Consfiguration"){
         RV$tasks <- RV$tasks %>% add_row(TASK = input$TASK, DESCRIPTION= input$DESCRIPTION,
-                                                 TIME_MIN_SEC = input$TIME_MIN_SEC,
-                                                 COUNTDOWN_MESSAGE = input$COUNTDOWN_MESSAGE)
+                                         TIME_MIN_SEC = input$TIME_MIN_SEC,
+                                         COUNTDOWN_MESSAGE = input$COUNTDOWN_MESSAGE)
         write.table(x = RV$tasks, file = file.path(userDir, 'tasksdescrip.csv'), append = FALSE,
                     row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
         
@@ -357,11 +346,11 @@ server <- function(input, output, session) {
           write.table(x = RV$tasks, file = file.path(userDir, "tasksdescrip.csv"), append = FALSE,
                       row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
         }}
-        else if (input$tabs == "Questionaire"){
-          
-        }
+      else if (input$tabs == "Questionaire"){
         
       }
+      
+    }
     
   }) 
   
@@ -379,17 +368,18 @@ server <- function(input, output, session) {
                 fluidRow(
                   if (questions() == FALSE){
                     box(width = 12,
-                        includeMarkdown("markdown.Rmd"),
+                        includeMarkdown(file.path("markdown.rmd")),
+                        #includeMarkdown(rmarkdown::render("markdown.Rmd")),
                         actionButton("questions", "Go to questionnaire", class = "btn-primary"),)}
                   else{
                     box(width = 12,
-                          # https://shiny.rstudio.com/articles/html-ui.html
-                          # puedo hacer lo mismo en html por el tema de que lo puedo cambiar en el usuario admin
-                          source("CSV_inputs/questionnaire.R", local=TRUE)$value,
-                          div(actionButton("start", "Start", class = "btn-primary"), style="float:left"),
-                          div(actionButton("back", "Back", class = "btn-primary"), style="float:right")
-                      )}
-                  ))}
+                        # https://shiny.rstudio.com/articles/html-ui.html
+                        # puedo hacer lo mismo en html por el tema de que lo puedo cambiar en el usuario admin
+                        source("CSV_inputs/questionnaire.R", local=TRUE)$value,
+                        div(actionButton("start", "Start", class = "btn-primary"), style="float:left"),
+                        div(actionButton("back", "Back", class = "btn-primary"), style="float:right")
+                    )}
+                ))}
       else{
         if (input$userName == "admin"){
           tabItems(
@@ -432,7 +422,7 @@ server <- function(input, output, session) {
                                            # actionButton("new_row", "Add new row"),
                                            # actionButton("delete_row","Delete a row"),
                                          )
-                                         ),
+                                ),
                                 tabPanel("Task Consfiguration", 
                                          box(
                                            width = NULL,
@@ -447,7 +437,7 @@ server <- function(input, output, session) {
                                          )
                                          
                                          
-                                         ),
+                                ),
                                 tabPanel("Questionaire",
                                          box(
                                            width = NULL,
@@ -455,42 +445,42 @@ server <- function(input, output, session) {
                                            # actionButton("new_row", "Add new row"),
                                            # actionButton("delete_row","Delete a row"),
                                          )
-                                         )
+                                )
                     )
-                    )
+            )
           )
           
         }
         
         else {
-        tabItems(
-          tabItem(tabName ="engine", class = "active",
-                  fluidRow(
-                    h1("Evaluating a Search Engine"),
-                    box(width = 12, 
-                        textOutput("task"),
-                        tags$head(tags$style("#task{color: black;
+          tabItems(
+            tabItem(tabName ="engine", class = "active",
+                    fluidRow(
+                      h1("Evaluating a Search Engine"),
+                      box(width = 12, 
+                          textOutput("task"),
+                          tags$head(tags$style("#task{color: black;
                                    font-size: 26px;
                                    font-style: bold;
                                    }"
-                        )),
-                        textOutput("descrip"),
-                        tags$head(tags$style("#descrip{color: black;
+                          )),
+                          textOutput("descrip"),
+                          tags$head(tags$style("#descrip{color: black;
                                    font-size: 20px;``
                                    }"
-                        )),
-                        textOutput('timeleft'),
-                        tags$head(tags$style("#timeleft{color: red;
+                          )),
+                          textOutput('timeleft'),
+                          tags$head(tags$style("#timeleft{color: red;
                                    font-size: 20px;``
                                    }"
-                        )),
-                        htmlOutput(num_engine),
-                        textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "100px"),
-                        actionButton("submit", "Submit", class = "btn-primary"),
-                  )))
-         )
-          }
+                          )),
+                          htmlOutput(num_engine),
+                          textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "100px"),
+                          actionButton("submit", "Submit", class = "btn-primary"),
+                      )))
+          )
         }
+      }
       
     }
     else {
@@ -514,7 +504,7 @@ server <- function(input, output, session) {
     else{
       task_des[input$submit +1]
     }
-   
+    
   })
   
   observeEvent(input$start,{
@@ -553,5 +543,3 @@ server <- function(input, output, session) {
     paste("Time left:", minutes(), "M", seconds(), "S")
   })
 }
-
-runApp(list(ui = ui, server = server), launch.browser = TRUE)

@@ -1,7 +1,6 @@
 ---
-title: "Evaluating a Search Engine"
+title: "markdown"
 output: html_document
-runtime: shiny
 ---
 
 ### Evaluating a Search Engine
