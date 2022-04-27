@@ -7,11 +7,11 @@ library(lubridate)
 library(stringr)
 library(base)
 library(glue)
-#library(shinyauthr)
 library(RSQLite)
 library(DBI)
 library(tidyverse)
 library(markdown)
+library(googlesheets4)
 
 function(input, output, session) {
   # Mandatory to write somethings in the text boxes! This way the red asterisk will appear 
@@ -31,9 +31,12 @@ function(input, output, session) {
   }
   
   # read configuration files
-  
-  task_description <- read.csv('CSV_inputs/tasksdescrip.csv')
-  users <- read.csv('CSV_inputs/users.csv')
+  tasks.url <- "https://docs.google.com/spreadsheets/d/1Jz-J3aiXtgJFA2jLq9Ymqx6Tx3e_q79utqCHlWiwaZs/edit#gid=0"
+  task_description <- read_sheet(tasks.url, sheet=1)
+  # <- read.csv('CSV_inputs/tasksdescrip.csv')
+  #users <- read.csv('CSV_inputs/users.csv')
+  users.url = "https://docs.google.com/spreadsheets/d/1TLIuDp8WSYiqEUMJWWeM7jKpUmlf3bhoK5g9WvkPcC0/edit#gid=0"
+  users <- read_sheet(users.url, sheet=1)
   
   
   ##################### Information to extract from csv's ########################
@@ -59,13 +62,23 @@ function(input, output, session) {
     task_des<- append(task_des, toString((task_description$DESCRIPTION)[val]))
   }
   
+  # min <- c()
+  # sec <- c()
+  # for (val in y) {
+  #   t <- (str_split((task_description$TIME_MIN_SEC)[val],":"))
+  #   min <- append(min, as.integer(sapply(t,"[[",1)))
+  #   sec <- append(sec, as.integer(sapply(t,"[[",2)))
+  # }
+  # 
   min <- c()
   sec <- c()
   for (val in y) {
-    t <- (str_split((task_description$TIME_MIN_SEC)[val],":"))
-    min <- append(min, as.integer(sapply(t,"[[",1)))
-    sec <- append(sec, as.integer(sapply(t,"[[",2)))
+    min <- append(min, as.integer((task_description$TIME_MIN)[val]))
+    sec <- append(sec, as.integer((task_description$TIME_SEC)[val]))
   }
+  
+  
+  
   credentials = data.frame(
     username_id = user_name,
     passod   = sapply(pass,password_store),
@@ -137,10 +150,10 @@ function(input, output, session) {
   output$sidebarpanel <- renderUI({
     if (USER$login == TRUE & PAGE$splash == FALSE){ 
       sidebarMenu(
-        menuItem("Description", tabName = "splash", icon = icon("th"))
-        # if (input$userName == "admin"){
-        #   menuItem("Config", tabName = "config", icon = icon("th"))
-        # }
+        menuItem("Description", tabName = "splash", icon = icon("th")),
+        if (input$userName == "admin"){
+          menuItem("Config", tabName = "config", icon = icon("th"))
+        }
       )
     }
     else if (USER$login == TRUE & PAGE$splash == TRUE){
@@ -298,9 +311,36 @@ function(input, output, session) {
   })
   
   # Load Data
-  RV <- reactiveValues(data = users, tasks = task_description )
-  user_data <- reactive({ RV$data})
-  t_descrip <- reactive({RV$tasks})
+  #RV <- reactiveValues(data = users, tasks = task_description )
+  #user_data <- reactive({RV$data})
+  
+  # For the check functions
+  x<-reactiveVal(0)
+  y<-reactiveVal(0)
+  user_data <- reactivePoll(
+                            intervalMillis= 100,
+                            session = session,
+                            checkFunc = function() {
+                              
+                              x()
+                             
+                            },
+                            valueFunc = function() {
+                              read_sheet(users.url)
+                            })
+  
+  #t_descrip <- reactive({RV$tasks})
+  t_descrip <- reactivePoll(
+                          intervalMillis= 100,
+                          session = session,
+                          checkFunc = function() {
+                            
+                            y()
+                            
+                          },
+                          valueFunc = function() {
+                            read_sheet(tasks.url)
+                          })
   
   #A test action button
   observeEvent(input$new_row, {
@@ -311,15 +351,26 @@ function(input, output, session) {
         name <- input$uname
         pass <- input$passs
         engine <- as.numeric(input$eng)
-        RV$data <- RV$data %>% add_row(USER_NAME = name, Password = pass, Engine = engine)
-        write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
-                    row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")}
+        # RV$data <- RV$data %>% add_row(USER_NAME = name, Password = pass, Engine = engine)
+        new_user <- data.frame(USER_NAME = name, Password = pass, Engine = engine)
+        # write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
+        #             row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+        sheet_append(users.url, data = new_user, sheet = 1)
+        x(1)
+        
+        }
       else if (input$tabs == "Task Consfiguration"){
-        RV$tasks <- RV$tasks %>% add_row(TASK = input$TASK, DESCRIPTION= input$DESCRIPTION,
-                                         TIME_MIN_SEC = input$TIME_MIN_SEC,
-                                         COUNTDOWN_MESSAGE = input$COUNTDOWN_MESSAGE)
-        write.table(x = RV$tasks, file = file.path(userDir, 'tasksdescrip.csv'), append = FALSE,
-                    row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+        new_task <- data.frame(TASK = input$TASK, DESCRIPTION= input$DESCRIPTION,
+                               TIME_MIN = input$TIME_MIN, TIME_SEC = input$TIME_SEC,
+                               COUNTDOWN_MESSAGE = input$COUNTDOWN_MESSAGE)
+        
+        # RV$tasks <- RV$tasks %>% add_row(TASK = input$TASK, DESCRIPTION= input$DESCRIPTION,
+        #                                  TIME_MIN_SEC = input$TIME_MIN_SEC,
+        #                                  COUNTDOWN_MESSAGE = input$COUNTDOWN_MESSAGE)
+        # write.table(x = RV$tasks, file = file.path(userDir, 'tasksdescrip.csv'), append = FALSE,
+        #             row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+        sheet_append(tasks.url, data = new_task, sheet = 1)
+        y(1)
         
         
       }
@@ -335,16 +386,23 @@ function(input, output, session) {
     if (input$userName == "admin"){
       if (!is.null(input$usertable_rows_selected)) {
         if (input$tabs =="Users"){
-          RV$data <- RV$data[-as.numeric(input$usertable_rows_selected),]
-          row.names(RV$data) <- NULL
-          write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
-                      row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")}}
+          row_num <- toString(input$usertable_rows_selected+1)
+          range_delete(users.url, sheet = 1, range = cell_rows(input$usertable_rows_selected+1), shift = NULL)
+          x(2)
+          # RV$data <- RV$data[-as.numeric(input$usertable_rows_selected),]
+          # row.names(RV$data) <- NULL
+          # write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
+          #             row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+          }}
       if(!is.null(input$tasktable_rows_selected)){
         if (input$tabs == "Task Consfiguration"){
-          RV$tasks <- RV$tasks[-as.numeric(input$tasktable_rows_selected),]
-          row.names(RV$tasks) <- NULL
-          write.table(x = RV$tasks, file = file.path(userDir, "tasksdescrip.csv"), append = FALSE,
-                      row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+          # RV$tasks <- RV$tasks[-as.numeric(input$tasktable_rows_selected),]
+          # row.names(RV$tasks) <- NULL
+          # write.table(x = RV$tasks, file = file.path(userDir, "tasksdescrip.csv"), append = FALSE,
+          #             row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+          row_num <- toString(input$tasktable_rows_selected+1)
+          range_delete(tasks.url, sheet = 1, range = cell_rows(input$tasktable_rows_selected+1), shift = NULL)
+          y(2)
         }}
       else if (input$tabs == "Questionaire"){
         
@@ -354,9 +412,64 @@ function(input, output, session) {
     
   }) 
   
-  
+
   output$usertable <- renderDataTable(user_data(), options = list(scrollX = TRUE))
   output$tasktable <- renderDataTable(t_descrip(), options = list(scrollX = TRUE))
+  
+  
+  
+  # definex el tab de configuració
+  configtab <- 
+    tabItem(tabName ="config",
+            tabsetPanel(type = "tabs", id = "tabs", footer = list(actionButton("new_row", "Add new row"),
+                                                                  actionButton("delete_row","Delete a row")),
+                        tabPanel("Users", 
+                                 box(
+                                   width = NULL,
+                                   status = "primary",
+                                   DT::dataTableOutput("usertable"),
+                                   textInput("uname", "User Name"),
+                                   textInput('passs','Password'),
+                                   selectInput("eng", ("Engine"),
+                                               choices = list("1" = 1, "2" = 2), selected = 2),
+                                   # actionButton("new_row", "Add new row"),
+                                   # actionButton("delete_row","Delete a row"),
+                                 )
+                        ),
+                        tabPanel("Task Consfiguration", 
+                                 box(
+                                   width = NULL,
+                                   status = "primary",
+                                   DT::dataTableOutput("tasktable"),
+                                   textInput("TASK", "Task number"),
+                                   textInput("DESCRIPTION", 'Task description'),
+                                   textInput('TIME_MIN','Minutes '),
+                                   textInput('TIME_SEC','Seconds'),
+                                   textInput('COUNTDOWN_MESSAGE','Countdown Message'),
+                                   # actionButton("new_row", "Add new row"),
+                                   # actionButton("delete_row","Delete a row"),
+                                 )
+                                 
+                                 
+                        ),
+                        tabPanel("Questionaire",
+                                 box(
+                                   width = NULL,
+                                   status = "primary",
+                                   # actionButton("new_row", "Add new row"),
+                                   # actionButton("delete_row","Delete a row"),
+                                 )
+                        )
+            )
+    )
+  #final tab item config
+  
+  
+  
+  
+  
+  
+  
   
   
   output$body <- renderUI({
@@ -364,22 +477,46 @@ function(input, output, session) {
       i<-match(input$userName,users$USER_NAME)
       num_engine <- paste("tab",users$Engine[i],sep="")
       if (PAGE$splash == FALSE ){
-        tabItem(tabName ="splash", class = "active",
-                fluidRow(
-                  if (questions() == FALSE){
-                    box(width = 12,
-                        includeMarkdown(file.path("markdown.rmd")),
-                        #includeMarkdown(rmarkdown::render("markdown.Rmd")),
-                        actionButton("questions", "Go to questionnaire", class = "btn-primary"),)}
-                  else{
-                    box(width = 12,
-                        # https://shiny.rstudio.com/articles/html-ui.html
-                        # puedo hacer lo mismo en html por el tema de que lo puedo cambiar en el usuario admin
-                        source("CSV_inputs/questionnaire.R", local=TRUE)$value,
-                        div(actionButton("start", "Start", class = "btn-primary"), style="float:left"),
-                        div(actionButton("back", "Back", class = "btn-primary"), style="float:right")
-                    )}
-                ))}
+        if (input$userName == "admin"){
+        tabItems(
+          tabItem(tabName ="splash", class = "active",
+                  fluidRow(
+                    if (questions() == FALSE){
+                      box(width = 12,
+                          includeMarkdown(file.path("markdown.rmd")),
+                          #includeMarkdown(rmarkdown::render("markdown.Rmd")),
+                          actionButton("questions", "Go to questionnaire", class = "btn-primary"),)}
+                    else{
+                      box(width = 12,
+                          # https://shiny.rstudio.com/articles/html-ui.html
+                          # puedo hacer lo mismo en html por el tema de que lo puedo cambiar en el usuario admin
+                          source("CSV_inputs/questionnaire.R", local=TRUE)$value,
+                          div(actionButton("start", "Start", class = "btn-primary"), style="float:left"),
+                          div(actionButton("back", "Back", class = "btn-primary"), style="float:right")
+                      )}
+                  )),
+          configtab)
+        }
+        else {
+          tabItems(
+            tabItem(tabName ="splash", class = "active",
+                    fluidRow(
+                      if (questions() == FALSE){
+                        box(width = 12,
+                            includeMarkdown(file.path("markdown.rmd")),
+                            #includeMarkdown(rmarkdown::render("markdown.Rmd")),
+                            actionButton("questions", "Go to questionnaire", class = "btn-primary"),)}
+                      else{
+                        box(width = 12,
+                            # https://shiny.rstudio.com/articles/html-ui.html
+                            # puedo hacer lo mismo en html por el tema de que lo puedo cambiar en el usuario admin
+                            source("CSV_inputs/questionnaire.R", local=TRUE)$value,
+                            div(actionButton("start", "Start", class = "btn-primary"), style="float:left"),
+                            div(actionButton("back", "Back", class = "btn-primary"), style="float:right")
+                        )}
+                    )))
+          
+        }}
       else{
         if (input$userName == "admin"){
           tabItems(
@@ -407,47 +544,7 @@ function(input, output, session) {
                           textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "100px"),
                           actionButton("submit", "Submit", class = "btn-primary"),
                       ))),
-            tabItem(tabName ="config",
-                    tabsetPanel(type = "tabs", id = "tabs", footer = list(actionButton("new_row", "Add new row"),
-                                                                          actionButton("delete_row","Delete a row")),
-                                tabPanel("Users", 
-                                         box(
-                                           width = NULL,
-                                           status = "primary",
-                                           DT::dataTableOutput("usertable"),
-                                           textInput("uname", "User Name"),
-                                           textInput('passs','Password'),
-                                           selectInput("eng", ("Engine"),
-                                                       choices = list("1" = 1, "2" = 2), selected = 2),
-                                           # actionButton("new_row", "Add new row"),
-                                           # actionButton("delete_row","Delete a row"),
-                                         )
-                                ),
-                                tabPanel("Task Consfiguration", 
-                                         box(
-                                           width = NULL,
-                                           status = "primary",
-                                           DT::dataTableOutput("tasktable"),
-                                           textInput("TASK", "Task number"),
-                                           textInput("DESCRIPTION", 'Task description'),
-                                           textInput('TIME_MIN_SEC','Time in minutes and seconds'),
-                                           textInput('COUNTDOWN_MESSAGE','Countdown Message'),
-                                           # actionButton("new_row", "Add new row"),
-                                           # actionButton("delete_row","Delete a row"),
-                                         )
-                                         
-                                         
-                                ),
-                                tabPanel("Questionaire",
-                                         box(
-                                           width = NULL,
-                                           status = "primary",
-                                           # actionButton("new_row", "Add new row"),
-                                           # actionButton("delete_row","Delete a row"),
-                                         )
-                                )
-                    )
-            )
+            configtab
           )
           
         }
