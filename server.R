@@ -12,6 +12,11 @@ library(DBI)
 library(tidyverse)
 library(markdown)
 library(googlesheets4)
+library(googledrive)
+
+
+gs4_auth(cache = ".secrets", email = "juliasanchezmartinez98@gmail.com")
+
 
 function(input, output, session) {
   # Mandatory to write somethings in the text boxes! This way the red asterisk will appear 
