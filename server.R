@@ -13,6 +13,7 @@ library(tidyverse)
 library(markdown)
 library(googlesheets4)
 library(googledrive)
+library(xlsx)
 
 
 gs4_auth(cache = ".secrets", email = "juliasanchezmartinez98@gmail.com")
@@ -42,6 +43,9 @@ function(input, output, session) {
   #users <- read.csv('CSV_inputs/users.csv')
   users.url = "https://docs.google.com/spreadsheets/d/1TLIuDp8WSYiqEUMJWWeM7jKpUmlf3bhoK5g9WvkPcC0/edit#gid=0"
   users <- read_sheet(users.url, sheet=1)
+  
+  responses.url <- "https://docs.google.com/spreadsheets/d/1OB1tlPc7Q8ao3W4yQhbP9kbT5BVv5upELNL0U1YGsLQ/edit#gid=0"
+  
   
   
   ##################### Information to extract from csv's ########################
@@ -234,7 +238,6 @@ function(input, output, session) {
   
   # define the form in which we want to save data
   fieldsAll <- c("userName","txt")
-  responsesDir <- file.path("response/")
   
   observeEvent(input$submit, {
     i <- match(task_number[input$submit +1],task_description$TASK)
@@ -254,8 +257,9 @@ function(input, output, session) {
       data <- sapply(fieldsAll, function(x) input[[x]])
       data <- c(data, Datestamp = Date())
       data <- c(data, Timestamp = Time())
-      data <- c(data, TimeToComplete = paste(m,s,sep=":"))
-      data <- c(data, SecondsToComplete = m*60+s)
+      data <- c(data, TimeToCompleteMin = m)
+      data <- c(data, TimeToCompleteSec = s)
+      data <- c(data, TotalSecondsToComplete = m*60+s)
       data <- c(data, Pages = count())
       data <- c(data, Clicks = clicks())
       data <- c(data, Task = task_number[input$submit])
@@ -293,17 +297,23 @@ function(input, output, session) {
   #############################################################################
   # Define function to save the data
   saveData <- function(data) {
-    fileName1 <- sprintf("app_results.tsv")
-    file = file.path(responsesDir, fileName1)
+    # fileName1 <- sprintf("app_results.tsv")
+    # responsesDir <- file.path("response/")
+    # file = file.path(responsesDir, fileName1)
+    # 
+    # if (!file.exists(paste(responsesDir,fileName1,sep=""))){
+    #   write.table(x = data, file = file.path(responsesDir, fileName1), append = TRUE,
+    #               row.names = FALSE, col.names = TRUE, qmethod = "double")
+    # }
+    # else{
+    #   write.table(x = data, file = file.path(responsesDir, fileName1), append = TRUE,
+    #               row.names = FALSE, col.names = FALSE, qmethod = "double")
+    # }
     
-    if (!file.exists(paste(responsesDir,fileName1,sep=""))){
-      write.table(x = data, file = file.path(responsesDir, fileName1), append = TRUE,
-                  row.names = FALSE, col.names = TRUE, qmethod = "double")
-    }
-    else{
-      write.table(x = data, file = file.path(responsesDir, fileName1), append = TRUE,
-                  row.names = FALSE, col.names = FALSE, qmethod = "double")
-    }
+    new_response <- data.frame(data)
+    sheet_append(responses.url, data = new_response, sheet = 1)
+    
+    
   }
   
   # go back and forth questionnaire
@@ -322,6 +332,7 @@ function(input, output, session) {
   # For the check functions
   x<-reactiveVal(0)
   y<-reactiveVal(0)
+  z<-reactiveVal(0)
   user_data <- reactivePoll(
                             intervalMillis= 100,
                             session = session,
@@ -347,11 +358,23 @@ function(input, output, session) {
                             read_sheet(tasks.url)
                           })
   
+  responses <- reactivePoll(
+                        intervalMillis= 100,
+                        session = session,
+                        checkFunc = function() {
+                          
+                          z()
+                          
+                        },
+                        valueFunc = function() {
+                          read_sheet(responses.url)
+    })
+  
   #A test action button
   observeEvent(input$new_row, {
     
     if (input$userName == "admin") {
-      userDir <- "CSV_inputs/"
+      #userDir <- "CSV_inputs/"
       if (input$tabs =="Users"){
         name <- input$uname
         pass <- input$passs
@@ -379,7 +402,10 @@ function(input, output, session) {
         
         
       }
-      else if (input$tabs == "Questionaire"){
+      else if (input$tabs == "Questionnaire"){
+        
+      }
+      else if (input$tabs == "Responses"){
         
       }
       
@@ -387,7 +413,7 @@ function(input, output, session) {
   }) 
   
   observeEvent(input$delete_row, {
-    userDir <- "CSV_inputs/"
+    #userDir <- "CSV_inputs/"
     if (input$userName == "admin"){
       if (!is.null(input$usertable_rows_selected)) {
         if (input$tabs =="Users"){
@@ -409,7 +435,13 @@ function(input, output, session) {
           range_delete(tasks.url, sheet = 1, range = cell_rows(input$tasktable_rows_selected+1), shift = NULL)
           y(2)
         }}
-      else if (input$tabs == "Questionaire"){
+      else if (input$tabs == "Questionnaire"){
+        
+      }
+      else if (input$tabs == "Responses"){
+        row_num <- toString(input$responsetable_rows_selected+1)
+        range_delete(responses.url, sheet = 1, range = cell_rows(input$responsetable_rows_selected+1), shift = NULL)
+        z(2)
         
       }
       
@@ -420,6 +452,7 @@ function(input, output, session) {
 
   output$usertable <- renderDataTable(user_data(), options = list(scrollX = TRUE))
   output$tasktable <- renderDataTable(t_descrip(), options = list(scrollX = TRUE))
+  output$responsetable <- renderDataTable(responses(), options = list(scrollX = TRUE))
   
   
   
@@ -457,10 +490,20 @@ function(input, output, session) {
                                  
                                  
                         ),
-                        tabPanel("Questionaire",
+                        tabPanel("Questionnaire",
                                  box(
                                    width = NULL,
                                    status = "primary",
+                                   # actionButton("new_row", "Add new row"),
+                                   # actionButton("delete_row","Delete a row"),
+                                 )
+                        ),
+                        tabPanel("Responses",
+                                 box(
+                                   width = NULL,
+                                   status = "primary",
+                                   DT::dataTableOutput("responsetable"),
+                                   downloadButton("downloadData", "Download")
                                    # actionButton("new_row", "Add new row"),
                                    # actionButton("delete_row","Delete a row"),
                                  )
@@ -644,4 +687,16 @@ function(input, output, session) {
   output$timeleft <- renderText({
     paste("Time left:", minutes(), "M", seconds(), "S")
   })
+  
+
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      paste("data-", Sys.Date(), ".xlsx", sep="")
+    },
+    content = function(file) {
+      write.xlsx(responses(), file)
+    }
+  )
+  
+  
 }
