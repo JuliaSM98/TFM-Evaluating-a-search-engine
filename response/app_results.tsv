@@ -1,7 +1,0 @@
-"userName" "txt" "Datestamp" "Timestamp" "TimeToCompleteMin" "TimeToCompleteSec" "TotalSecondsToComplete" "Clicks" "Task" "Engine" "Age" "Gender" "Nationality" "Course" "Experience"
-"user1" "hola" "2022-05-01" "13:23:39" "0" "5" "5" "0" "Task 1" "1" "2" "2" "" "" ""
-"user1" "none" "2022-05-01" "13:23:42" "0" "2" "2" "0" "Task 2" "1" "2" "2" "" "" ""
-"user1" "what" "2022-05-01" "13:23:44" "0" "2" "2" "0" "Task 3" "1" "2" "2" "" "" ""
-"user1" "jjojojojojojojoj" "2022-05-01" "13:23:49" "0" "6" "6" "0" "Task 4" "1" "2" "2" "" "" ""
-"user1" "" "2022-05-01" "13:23:50" "0" "0" "0" "0" "Task 5" "1" "2" "2" "" "" ""
-"user1" "" "2022-05-01" "13:23:50" "0" "0" "0" "0" "Task 6" "1" "2" "2" "" "" ""

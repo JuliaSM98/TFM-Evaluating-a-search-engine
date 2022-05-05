@@ -11,11 +11,12 @@
 // ----------------------------------------------------------------------------------
 
 // The hostname of the upstream website to proxy(example: `www.google.com`).
-const upstream = 'www.google.com';
+const upstream = 'pubmed.ncbi.nlm.nih.gov';
 
 // The hostname of the upstream website to proxy for requests coming from mobile devices(example: `www.google.com`).
 // if the upstream website doesn't have a dedicated hostname for mobile devices, you can set it to NULL.
-const upstream_mobile = null;
+//const upstream_mobile = null;
+const upstream_mobile = 'pubmed.ncbi.nlm.nih.gov';
 
 // Custom pathname for the upstream website ('/' will work for most scenarios)
 const upstream_path = '/';
@@ -46,7 +47,7 @@ const https = true;
 // ref.: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite
 // NOTE: This is an experimental feature and could prevent some cookies from being generated due to a known bug of the Fetch API
 // affecting the "Set-Cookie" response headers: use it at your own risk.
-const set_cookie_samesite_none = false;
+const set_cookie_samesite_none = true;
 
 // an array of HTTP Response Headers to add (or to update, in case they're already present in the upstream response)
 const http_response_headers_set = {
@@ -54,8 +55,8 @@ const http_response_headers_set = {
     // NOTE: be sure to replace "https://www.example.com" with the domain of the HTML page containing the IFRAME.
     // ref.: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
     // ref.: https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
-    'X-Frame-Options': 'ALLOW FROM https://www.example.com', // IE
-    'Content-Security-Policy': "frame-ancestors 'self' https://www.example.com;", // Chrome, Firefox, etc.
+    'X-Frame-Options': 'ALLOW FROM https://1paumx-j0lia-s0nchez0mart0nez.shinyapps.io/tfm-evaluating-a-search-engine', // IE
+    'Content-Security-Policy': "frame-ancestors 'self' https://1paumx-j0lia-s0nchez0mart0nez.shinyapps.io/tfm-evaluating-a-search-engine", // Chrome, Firefox, etc.
 
     // use this header to bypass the same-origin policy for XMLHttpRequest, Fetch API and so on
     // ref.: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
@@ -69,11 +70,12 @@ const http_response_headers_set = {
     // 'must-revalidate', 'no-cache', 'no-store', 'no-transform', 'public', 'private', 
     // 'proxy-revalidate', 'max-age=<seconds>', 's-maxage=<seconds>'.
     // ref.: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
-    // 'Cache-Control': 'no-cache'
+    'Cache-Control': 'max-age=604800'
 };
 
 // an array of HTTP Response Headers to delete (if present in the upstream response)
 const http_response_headers_delete = [
+    'Content-Security-Policy',
     'Content-Security-Policy-Report-Only',
     'Clear-Site-Data'
 ];
@@ -102,10 +104,11 @@ const http_response_headers_delete = [
 const replacement_rules = {
 
     // enable this rule only if you need to HTTPS proxy an HTTP-only website
-    'http://{upstream_hostname}/': 'https://{proxy_hostname}/',
+    //'http://{upstream_hostname}/': 'https://{proxy_hostname}/',
 
     // this rule should be always enabled (replaces the upstream hostname for internal links, CSS, JS, and so on)
-    '{upstream_hostname}': '{proxy_hostname}',
+    //'{upstream_hostname}': '{proxy_hostname}',
+    'https://pubmed.ncbi.nlm.nih.gov': 'https://pubmed.juliasanchezmartinez98.workers.dev'
 
 }
 

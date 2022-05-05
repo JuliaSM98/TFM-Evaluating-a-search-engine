@@ -14,6 +14,7 @@ library(markdown)
 library(googlesheets4)
 library(googledrive)
 library(xlsx)
+library(shinysurveys)
 
 
 gs4_auth(cache = ".secrets", email = "juliasanchezmartinez98@gmail.com")
@@ -513,13 +514,6 @@ function(input, output, session) {
   #final tab item config
   
   
-  
-  
-  
-  
-  
-  
-  
   output$body <- renderUI({
     if (USER$login == TRUE ) {
       i<-match(input$userName,users$USER_NAME)
@@ -535,13 +529,20 @@ function(input, output, session) {
                           #includeMarkdown(rmarkdown::render("markdown.Rmd")),
                           actionButton("questions", "Go to questionnaire", class = "btn-primary"),)}
                     else{
+                      fluidRow(
+                      # box(width = 12,
+                      #     #surveyOutput(read.csv("questions.csv"))
+                      #     source("CSV_inputs/questionnaire.R", local=TRUE)$value
+                      #     ),
                       box(width = 12,
                           # https://shiny.rstudio.com/articles/html-ui.html
                           # puedo hacer lo mismo en html por el tema de que lo puedo cambiar en el usuario admin
                           source("CSV_inputs/questionnaire.R", local=TRUE)$value,
                           div(actionButton("start", "Start", class = "btn-primary"), style="float:left"),
                           div(actionButton("back", "Back", class = "btn-primary"), style="float:right")
-                      )}
+                      ))
+                      #source("render_survey.R", local=TRUE)$value
+                      }
                   )),
           configtab)
         }
@@ -652,8 +653,10 @@ function(input, output, session) {
     
   })
   
+  #renderSurvey()
   observeEvent(input$start,{
     PAGE$splash <- TRUE 
+    
   })
   
   
@@ -694,7 +697,7 @@ function(input, output, session) {
       paste("data-", Sys.Date(), ".xlsx", sep="")
     },
     content = function(file) {
-      write.xlsx(responses(), file)
+      openxlsx::write.xlsx(responses(), file)
     }
   )
   

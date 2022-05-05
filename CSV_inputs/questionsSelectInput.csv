@@ -1,4 +1,1 @@
-"name","text","choices"
-"age","Age","18-22 22-30 >30"
-"gender","Select gender","Male Female Other"
-
+"question","option","input_type","input_id","dependence","dependence_value","required"
