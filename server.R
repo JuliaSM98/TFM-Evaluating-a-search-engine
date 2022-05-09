@@ -24,7 +24,7 @@ function(input, output, session) {
   # Mandatory to write somethings in the text boxes! This way the red asterisk will appear 
   fieldsMandatory <- c("txt") 
   
-  # We define Date and Time, too know at which date and at which time the subject pressed submit
+  # We define Date and Time, too know at which date and at which time the subject pressed submit_answer
   Date <- function() format(Sys.time(), "%Y-%m-%d")
   Time <-function() format(Sys.time(), "%H:%M:%OS")
   #humanTime <- function() format(Sys.time(), "%Y%m%d-%H%M%OS")
@@ -179,10 +179,10 @@ function(input, output, session) {
     }
   })
   
-  # If someone writes an answer and clicks submit, clear txt
+  # If someone writes an answer and clicks submit_answer, clear txt
   observe({
-    if (!is.null(input$submit)) {
-      if(input$submit>0){
+    if (!is.null(input$submit_answer)) {
+      if(input$submit_answer>0){
         updateTextInput(session, "txt", value = "")
       }
     }
@@ -190,7 +190,7 @@ function(input, output, session) {
   
   ####### Define the time for each task and also the countdown message ########
   if(isolate(USER$login) == TRUE & isolate(PAGE$splash)==TRUE){
-    k <- isolate(input$submit)
+    k <- isolate(input$submit_answer)
   }
   else {
     k<-0
@@ -213,7 +213,7 @@ function(input, output, session) {
           seconds(seconds()-1)
           if(minutes() ==0 & seconds() ==0){
             active(FALSE)
-            j <- match(task_number[input$submit +1],task_description$TASK)
+            j <- match(task_number[input$submit_answer +1],task_description$TASK)
             showModal(modalDialog(
               title = "Important message",
               task_description$COUNTDOWN_MESSAGE[j]
@@ -237,15 +237,15 @@ function(input, output, session) {
     return(paste(m,s,sep=":"))
   }
   
-  # When input$submit, we change the min/sec from next task and save data
+  # When input$submit_answer, we change the min/sec from next task and save data
   
   
   # define the form in which we want to save data
   fieldsAll <- c("userName","txt")
   
-  observeEvent(input$submit, {
-    i <- match(task_number[input$submit +1],task_description$TASK)
-    j <- match(task_number[input$submit],task_description$TASK)
+  observeEvent(input$submit_answer, {
+    i <- match(task_number[input$submit_answer +1],task_description$TASK)
+    j <- match(task_number[input$submit_answer],task_description$TASK)
     
     m<-min[j]-minutes()
     s<-sec[j]-seconds()
@@ -257,6 +257,11 @@ function(input, output, session) {
       if (m<0) m<-0
     }
     
+    
+    df <- getSurveyData()
+    row <- dim(df)[1]
+    
+    
     formData <- reactive({
       data <- sapply(fieldsAll, function(x) input[[x]])
       data <- c(data, Datestamp = Date())
@@ -266,14 +271,19 @@ function(input, output, session) {
       data <- c(data, TotalSecondsToComplete = m*60+s)
       data <- c(data, Pages = count())
       data <- c(data, Clicks = clicks())
-      data <- c(data, Task = task_number[input$submit])
+      data <- c(data, Task = task_number[input$submit_answer])
       i<-match(input$userName,users$USER_NAME)
       data <- c(data, Engine = users$Engine[i])
-      data <- c(data, Age = input$age)
-      data <- c(data, Gender = input$gender)
-      data <- c(data, Nationality = input$nationality)
-      data <- c(data, Course = input$course)
-      data <- c(data, Experience = input$experience)
+      # data <- c(data, Age = input$age)
+      # data <- c(data, Gender = input$gender)
+      # data <- c(data, Nationality = input$nationality)
+      # data <- c(data, Course = input$course)
+      # data <- c(data, Experience = input$experience)
+      for (i in 1:row){
+        content <- toString(df[i,4])
+        data <- c(data, Questionnaire = content)
+      }
+      #data <- c(data, IDd=b)
       data <- t(data)
       data
     })
@@ -288,10 +298,10 @@ function(input, output, session) {
       shinyjs::toggleState(id = "txt", condition = FALSE)
       minutes(0)
       seconds(0)
-      shinyjs::toggleState(id = "submit", condition = FALSE)
+      shinyjs::toggleState(id = "submit_answer", condition = FALSE)
     }
     
-    if (input$submit > length(task_number)){
+    if (input$submit_answer > length(task_number)){
     }
     else{
       saveData(formData())
@@ -300,7 +310,9 @@ function(input, output, session) {
   })
   #############################################################################
   # Define function to save the data
+  
   saveData <- function(data) {
+    responses_read <- read_sheet(responses.url, sheet=1)
     # fileName1 <- sprintf("app_results.tsv")
     # responsesDir <- file.path("response/")
     # file = file.path(responsesDir, fileName1)
@@ -315,7 +327,13 @@ function(input, output, session) {
     # }
     
     new_response <- data.frame(data)
-    sheet_append(responses.url, data = new_response, sheet = 1)
+    print(new_response)
+    if (dim(responses_read)[1]==0 & dim(responses_read)[2]==0) {
+      sheet_write(responses.url, data = new_response, sheet = 1)
+      
+    }
+    else {
+    sheet_append(responses.url, data = new_response, sheet = 1)}
     
     
   }
@@ -543,7 +561,7 @@ function(input, output, session) {
                           # https://shiny.rstudio.com/articles/html-ui.html
                           # puedo hacer lo mismo en html por el tema de que lo puedo cambiar en el usuario admin
                           #source('render_survey.R'),
-                          source("CSV_inputs/questionnaire.R", local=TRUE)$value,
+                          #source("CSV_inputs/questionnaire.R", local=TRUE)$value,
                           div(actionButton("start", "Start", class = "btn-primary"), style="float:left"),
                           div(actionButton("back", "Back", class = "btn-primary"), style="float:right")
                       ))
@@ -597,7 +615,7 @@ function(input, output, session) {
                           )),
                           htmlOutput(num_engine),
                           textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "100px"),
-                          actionButton("submit", "Submit", class = "btn-primary"),
+                          actionButton("submit_answer", "Submit", class = "btn-primary"),
                       ))),
             configtab
           )
@@ -628,7 +646,7 @@ function(input, output, session) {
                           )),
                           htmlOutput(num_engine),
                           textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "100px"),
-                          actionButton("submit", "Submit", class = "btn-primary"),
+                          actionButton("submit_answer", "Submit", class = "btn-primary"),
                       )))
           )
         }
@@ -641,20 +659,20 @@ function(input, output, session) {
   })
   
   output$task <- renderText({
-    if (input$submit+1 > length(task_number)){
+    if (input$submit_answer+1 > length(task_number)){
       "You have finished!"
     }
     else{
-      paste(task_number[input$submit +1],"of",length(task_number))
+      paste(task_number[input$submit_answer +1],"of",length(task_number))
     }
   })
   
   output$descrip <- renderText({
-    if (input$submit+1 > length(task_number)){
+    if (input$submit_answer+1 > length(task_number)){
       "Congratulations!"
     }
     else{
-      task_des[input$submit +1]
+      task_des[input$submit_answer +1]
     }
     
   })
@@ -673,7 +691,7 @@ function(input, output, session) {
   output$tab1<-renderUI({getPage1()})
   count <- reactive({ input$count }) 
   
-  observeEvent(input$submit,{
+  observeEvent(input$submit_answer,{
     output$tab1<-renderUI({getPage1()})
     count <- reactive({ input$count }) 
     clicks <- reactive({ input$click }) 
@@ -687,7 +705,7 @@ function(input, output, session) {
   count <- reactive({ input$count })
   clicks <- reactive({ input$click }) 
   
-  observeEvent(input$submit,{
+  observeEvent(input$submit_answer,{
     output$tab2<-renderUI({getPage2()})
     count <- reactive({ input$count }) 
     clicks <- reactive({ input$click }) 

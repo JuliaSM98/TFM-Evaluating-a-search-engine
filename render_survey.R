@@ -54,16 +54,33 @@ server <- function(input, output) {
           div(actionButton("back", "Back", class = "btn-primary"), style="float:right")
       ))
   })
-  #)
+  
 
-
-  #renderSurvey()
-  observe(
-    print(input$course))
+  # data <- c(data, Age = input$age)
+  # data <- c(data, Gender = input$gender)
+  # data <- c(data, Nationality = input$nationality)
+  # data <- c(data, Course = input$course)
+  # data <- c(data, Experience = input$experience)
+  
 
   observeEvent(input$submit, {
-    print(input)
-    #getSurveyData()
+    df <- getSurveyData()
+    # print(df)
+    a<- df[,"question_id"]
+    b<- df[,"response"]
+    # print(a[[1]])
+    # print(b[[1]])
+    #data <- c(data, a=b)
+    #print(data)
+    
+    for (i in 1:5){
+      idd <- (df[i,2])
+      content <- toString(df[i,4])
+      print(idd)
+      print(content)
+      data <- c(data, df$idd = content)
+    }
+    print(data)
   })
 }
 
