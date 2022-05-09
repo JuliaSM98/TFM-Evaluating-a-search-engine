@@ -14,28 +14,8 @@
         </script>
     </head>
     <body>
-        <iframe id="ifr" src="https://elpais.com/" onLoad="doOnLoad()" ></iframe>
-        <script>    
-            function doOnLoad() { 
-                countInput++;
-                Shiny.setInputValue("count",countInput);
-            }
-            
-	    window.setInterval(checkFocus, 100);
-	   // Ejecuta una función de forma repetitiva cada vez que termina el periodo de tiempo determinado. Devuelve un ID de proceso.
-	  // Miramos si ha habido alguna interacción cada 200 ms
-		
-	 // Focus determines where keyboard events go in the page at any given moment.
-	    function checkFocus() { 
-		  if(document.activeElement == document.getElementById("ifr")) { 
-	 // document.activeElement it returns elements with focus, which they  immediately lose. With window.focus we reactivate it again.
-		  	clicksInput++;
-		  	window.focus(); // The focus() method sets focus to a window, the iframe in our case!!
-		   }
-		   Shiny.setInputValue("click",clicksInput);
-		}
-	    
-	    
-        </script>
+        
+        <iframe id="iframe" src="https://pubmed.juliasanchezmartinez98.workers.dev/"  ></iframe>
+        <script src="test.js"></script>
     </body>
 </html>

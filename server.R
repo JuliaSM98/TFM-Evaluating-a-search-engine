@@ -515,6 +515,7 @@ function(input, output, session) {
   
   
   output$body <- renderUI({
+    shiny:::hasCurrentRestoreContext()
     if (USER$login == TRUE ) {
       i<-match(input$userName,users$USER_NAME)
       num_engine <- paste("tab",users$Engine[i],sep="")
@@ -537,6 +538,7 @@ function(input, output, session) {
                       box(width = 12,
                           # https://shiny.rstudio.com/articles/html-ui.html
                           # puedo hacer lo mismo en html por el tema de que lo puedo cambiar en el usuario admin
+                          #source('render_survey.R'),
                           source("CSV_inputs/questionnaire.R", local=TRUE)$value,
                           div(actionButton("start", "Start", class = "btn-primary"), style="float:left"),
                           div(actionButton("back", "Back", class = "btn-primary"), style="float:right")
