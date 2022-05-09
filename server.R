@@ -47,6 +47,9 @@ function(input, output, session) {
   
   responses.url <- "https://docs.google.com/spreadsheets/d/1OB1tlPc7Q8ao3W4yQhbP9kbT5BVv5upELNL0U1YGsLQ/edit#gid=0"
   
+  questions.url <- "https://docs.google.com/spreadsheets/d/1hYgo1f90zLOEQthe_k_6qpj4p7TnikZ14LCj2Cf-OcE/edit#gid=0"
+  questions_drive <- read_sheet(questions.url, sheet=1)
+  
   
   
   ##################### Information to extract from csv's ########################
@@ -531,10 +534,11 @@ function(input, output, session) {
                           actionButton("questions", "Go to questionnaire", class = "btn-primary"),)}
                     else{
                       fluidRow(
-                      # box(width = 12,
-                      #     #surveyOutput(read.csv("questions.csv"))
-                      #     source("CSV_inputs/questionnaire.R", local=TRUE)$value
-                      #     ),
+                      box(width = 12,
+                          #surveyOutput(read.csv("questions.csv"))
+                          surveyOutput(questions_drive)
+                          #surveyOutput(df=readRDS('questions.rds'))
+                          ),
                       box(width = 12,
                           # https://shiny.rstudio.com/articles/html-ui.html
                           # puedo hacer lo mismo en html por el tema de que lo puedo cambiar en el usuario admin

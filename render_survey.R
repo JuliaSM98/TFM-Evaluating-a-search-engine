@@ -1,7 +1,3 @@
-library(shinysurveys)
-library(shiny)
-library(tibble)
-library(shinydashboard)
 library(shiny)
 library(shinyjs)
 library(shinydashboard)
@@ -15,7 +11,10 @@ library(RSQLite)
 library(DBI)
 library(tidyverse)
 library(markdown)
-library(tibble)
+library(googlesheets4)
+library(googledrive)
+library(xlsx)
+library(shinysurveys)
 
 
 appCSS <- ".mandatory_star { color: red; }
@@ -27,33 +26,10 @@ sidebar <- dashboardSidebar(uiOutput("sidebarpanel"))
 body <- dashboardBody(shinyjs::useShinyjs(), shinyjs::inlineCSS(appCSS), uiOutput("body"))
 ui <- dashboardPage(header, sidebar, body, skin = "blue")
 
-df <- data.frame(
-                question = "What is your favorite food?",
-                 option = "Your Answer",
-                 input_type = 'id',"text",
-                 input_id = "favorite_food",
-                 dependence = NA,
-                 dependence_value = NA,
-                 required = F)
+questions.url <- "https://docs.google.com/spreadsheets/d/1hYgo1f90zLOEQthe_k_6qpj4p7TnikZ14LCj2Cf-OcE/edit#gid=0"
+questions <- read_sheet(questions.url, sheet=1)
 
-slider_question <- data.frame(
-  question = "On a scale from 1-10, how much do you love sushi?",
-  option = NA,
-  input_type = "slider",
-  input_id = "sushi_scale",
-  dependence = NA,
-  dependence_value = NA,
-  required = TRUE
-)
-extendInputType(input_type = "slider", {
-  shiny::sliderInput(
-    inputId = surveyID(),
-    label = surveyLabel(),
-    min = 1,
-    max = 10,
-    value = 5
-  ) 
-})
+
 
 server <- function(input, output) {
   
@@ -65,7 +41,8 @@ server <- function(input, output) {
     # Boxes need to be put in a row (or column)
     fluidRow(
       box(width = 12,
-          surveyOutput(df=readRDS('questions.rds'))
+          #surveyOutput(df=readRDS('questions.rds'))
+          surveyOutput(df=questions)
           #surveyOutput(read.csv("questions.csv"))
           #source("CSV_inputs/questionnaire.R", local=TRUE)$value
       ),
@@ -81,10 +58,11 @@ server <- function(input, output) {
 
 
   #renderSurvey()
-
+  observe(
+    print(input$course))
 
   observeEvent(input$submit, {
-    print(input$age)
+    print(input)
     #getSurveyData()
   })
 }
