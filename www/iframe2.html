@@ -10,7 +10,6 @@
         </style>
         <script> 
               var countInput = -1;
-              var clicksInput = 0; 
         </script>
     </head>
     <body>
@@ -21,20 +20,6 @@
                 countInput++;
                 Shiny.setInputValue("count",countInput);
             }
-            
-	    window.setInterval(checkFocus, 100);
-	    // Ejecuta una función de forma repetitiva cada vez que termina el periodo de tiempo determinado. Devuelve un ID de proceso.
-		
-	    // Focus determines where keyboard events go in the page at any given moment.
-	    function checkFocus() { 
-		  if(document.activeElement == document.getElementById("ifr")) { // document.activeElement it returns elements with focus, 			it es elements in which something has happened. With window.focus we reactivate it again.
-		  	clicksInput++;
-		  	window.focus(); // The focus() method sets focus to a window!!
-		   }
-		   Shiny.setInputValue("click",clicksInput);
-		}
-	    
-	    
         </script>
     </body>
 </html>

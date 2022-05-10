@@ -270,7 +270,7 @@ function(input, output, session) {
       data <- c(data, TimeToCompleteSec = s)
       data <- c(data, TotalSecondsToComplete = m*60+s)
       data <- c(data, Pages = count())
-      data <- c(data, Clicks = clicks())
+      #data <- c(data, Clicks = clicks())
       data <- c(data, Task = task_number[input$submit_answer])
       i<-match(input$userName,users$USER_NAME)
       data <- c(data, Engine = users$Engine[i])
@@ -281,9 +281,8 @@ function(input, output, session) {
       # data <- c(data, Experience = input$experience)
       for (i in 1:row){
         content <- toString(df[i,4])
-        data <- c(data, Questionnaire = content)
+        data <- c(data, Q = content)
       }
-      #data <- c(data, IDd=b)
       data <- t(data)
       data
     })
@@ -327,7 +326,7 @@ function(input, output, session) {
     # }
     
     new_response <- data.frame(data)
-    print(new_response)
+    
     if (dim(responses_read)[1]==0 & dim(responses_read)[2]==0) {
       sheet_write(responses.url, data = new_response, sheet = 1)
       
@@ -352,9 +351,11 @@ function(input, output, session) {
   #user_data <- reactive({RV$data})
   
   # For the check functions
-  x<-reactiveVal(0)
-  y<-reactiveVal(0)
-  z<-reactiveVal(0)
+  i=reactiveVal(0)
+  x<-reactiveVal(i)
+  y<-reactiveVal(i)
+  z<-reactiveVal(i)
+  p<-reactiveVal(i)
   user_data <- reactivePoll(
                             intervalMillis= 100,
                             session = session,
@@ -389,7 +390,19 @@ function(input, output, session) {
                           
                         },
                         valueFunc = function() {
-                          read_sheet(responses.url)
+                          read_sheet(responses.url,sheet = 1)
+    })
+  
+  questionss <- reactivePoll(
+    intervalMillis= 100,
+    session = session,
+    checkFunc = function() {
+      
+      p()
+      
+    },
+    valueFunc = function() {
+      read_sheet(questions.url)
     })
   
   #A test action button
@@ -406,7 +419,8 @@ function(input, output, session) {
         # write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
         #             row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
         sheet_append(users.url, data = new_user, sheet = 1)
-        x(1)
+        i(i()+1)
+        x(i())
         
         }
       else if (input$tabs == "Task Consfiguration"){
@@ -420,11 +434,31 @@ function(input, output, session) {
         # write.table(x = RV$tasks, file = file.path(userDir, 'tasksdescrip.csv'), append = FALSE,
         #             row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
         sheet_append(tasks.url, data = new_task, sheet = 1)
-        y(1)
+        i(i()+1)
+        y(i())
         
         
       }
       else if (input$tabs == "Questionnaire"){
+        
+        print(input$question)
+        print(input$option)
+        print(input$input_type)
+        print(input$input_id)
+        
+        new_question <- data.frame(question = input$question , option= input$option ,
+                                   input_type  = input$input_type, input_id = input$input_id,
+                                   dependence  = 'NA', dependence_value = 'NA', required = TRUE)
+        
+        # RV$tasks <- RV$tasks %>% add_row(TASK = input$TASK, DESCRIPTION= input$DESCRIPTION,
+        #                                  TIME_MIN_SEC = input$TIME_MIN_SEC,
+        #                                  COUNTDOWN_MESSAGE = input$COUNTDOWN_MESSAGE)
+        # write.table(x = RV$tasks, file = file.path(userDir, 'tasksdescrip.csv'), append = FALSE,
+        #             row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+        sheet_append(questions.url, data = new_question, sheet = 1)
+        i(i()+1)
+        p(i())
+        
         
       }
       else if (input$tabs == "Responses"){
@@ -441,7 +475,9 @@ function(input, output, session) {
         if (input$tabs =="Users"){
           row_num <- toString(input$usertable_rows_selected+1)
           range_delete(users.url, sheet = 1, range = cell_rows(input$usertable_rows_selected+1), shift = NULL)
-          x(2)
+          i(i()+1)
+          x(i())
+          
           # RV$data <- RV$data[-as.numeric(input$usertable_rows_selected),]
           # row.names(RV$data) <- NULL
           # write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
@@ -455,15 +491,21 @@ function(input, output, session) {
           #             row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
           row_num <- toString(input$tasktable_rows_selected+1)
           range_delete(tasks.url, sheet = 1, range = cell_rows(input$tasktable_rows_selected+1), shift = NULL)
-          y(2)
+          i(i()+1)
+          y(i())
         }}
       else if (input$tabs == "Questionnaire"){
+        row_num <- toString(input$questiontable_rows_selected+1)
+        range_delete(questions.url, sheet = 1, range = cell_rows(input$questiontable_rows_selected+1), shift = NULL)
+        i(i()+1)
+        p(i())
         
       }
       else if (input$tabs == "Responses"){
         row_num <- toString(input$responsetable_rows_selected+1)
         range_delete(responses.url, sheet = 1, range = cell_rows(input$responsetable_rows_selected+1), shift = NULL)
-        z(2)
+        i(i()+1)
+        z(i())
         
       }
       
@@ -475,6 +517,7 @@ function(input, output, session) {
   output$usertable <- renderDataTable(user_data(), options = list(scrollX = TRUE))
   output$tasktable <- renderDataTable(t_descrip(), options = list(scrollX = TRUE))
   output$responsetable <- renderDataTable(responses(), options = list(scrollX = TRUE))
+  output$questiontable <- renderDataTable(questionss(), options = list(scrollX = TRUE))
   
   
   
@@ -516,6 +559,11 @@ function(input, output, session) {
                                  box(
                                    width = NULL,
                                    status = "primary",
+                                   DT::dataTableOutput("questiontable"),
+                                   textInput("question", "Question"),
+                                   textInput("option", 'Option'),
+                                   textInput('input_type','Input Type '),
+                                   textInput('input_id','Input ID'),
                                    # actionButton("new_row", "Add new row"),
                                    # actionButton("delete_row","Delete a row"),
                                  )
@@ -580,13 +628,19 @@ function(input, output, session) {
                             #includeMarkdown(rmarkdown::render("markdown.Rmd")),
                             actionButton("questions", "Go to questionnaire", class = "btn-primary"),)}
                       else{
+                        fluidRow(
+                        box(width = 12,
+                            #surveyOutput(read.csv("questions.csv"))
+                            surveyOutput(questions_drive)
+                            #surveyOutput(df=readRDS('questions.rds'))
+                        ),
                         box(width = 12,
                             # https://shiny.rstudio.com/articles/html-ui.html
                             # puedo hacer lo mismo en html por el tema de que lo puedo cambiar en el usuario admin
-                            source("CSV_inputs/questionnaire.R", local=TRUE)$value,
+                            #source("CSV_inputs/questionnaire.R", local=TRUE)$value,
                             div(actionButton("start", "Start", class = "btn-primary"), style="float:left"),
                             div(actionButton("back", "Back", class = "btn-primary"), style="float:right")
-                        )}
+                        ))}
                     )))
           
         }}
@@ -694,7 +748,7 @@ function(input, output, session) {
   observeEvent(input$submit_answer,{
     output$tab1<-renderUI({getPage1()})
     count <- reactive({ input$count }) 
-    clicks <- reactive({ input$click }) 
+    #clicks <- reactive({ input$click }) 
   })
   
   
@@ -703,12 +757,12 @@ function(input, output, session) {
   }
   output$tab2<-renderUI({getPage2()})
   count <- reactive({ input$count })
-  clicks <- reactive({ input$click }) 
+  #clicks <- reactive({ input$click }) 
   
   observeEvent(input$submit_answer,{
     output$tab2<-renderUI({getPage2()})
     count <- reactive({ input$count }) 
-    clicks <- reactive({ input$click }) 
+    #clicks <- reactive({ input$click }) 
   })
   
   output$timeleft <- renderText({
