@@ -602,7 +602,7 @@ function(input, output, session) {
                       fluidRow(
                       box(width = 12,
                           #surveyOutput(read.csv("questions.csv"))
-                          surveyOutput(questions_drive)
+                          surveyOutput( questions_drive)
                           #surveyOutput(df=readRDS('questions.rds'))
                           ),
                       box(width = 12,
@@ -738,7 +738,6 @@ function(input, output, session) {
   })
   
   
-  
   getPage1<-function() {
     return(includeHTML("www/iframe1.html"))
   }
@@ -779,5 +778,13 @@ function(input, output, session) {
     }
   )
   
+  
+  observeEvent(input$submit, {
+    showModal(modalDialog(
+      title = "Questionnaire submitted",
+      "Click Start button if you have completed all the questions!"
+      
+    ))
+  })
   
 }

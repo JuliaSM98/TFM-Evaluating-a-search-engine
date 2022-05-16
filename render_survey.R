@@ -26,8 +26,8 @@ sidebar <- dashboardSidebar(uiOutput("sidebarpanel"))
 body <- dashboardBody(shinyjs::useShinyjs(), shinyjs::inlineCSS(appCSS), uiOutput("body"))
 ui <- dashboardPage(header, sidebar, body, skin = "blue")
 
-questions.url <- "https://docs.google.com/spreadsheets/d/1hYgo1f90zLOEQthe_k_6qpj4p7TnikZ14LCj2Cf-OcE/edit#gid=0"
-questions <- read_sheet(questions.url, sheet=1)
+# questions.url <- "https://docs.google.com/spreadsheets/d/1hYgo1f90zLOEQthe_k_6qpj4p7TnikZ14LCj2Cf-OcE/edit#gid=0"
+# questions <- read_sheet(questions.url, sheet=1)
 
 
 
@@ -41,8 +41,8 @@ server <- function(input, output) {
     # Boxes need to be put in a row (or column)
     fluidRow(
       box(width = 12,
-          #surveyOutput(df=readRDS('questions.rds'))
-          surveyOutput(df=questions)
+          surveyOutput(df=readRDS('questions.rds'))
+          #surveyOutput(df=questions)
           #surveyOutput(read.csv("questions.csv"))
           #source("CSV_inputs/questionnaire.R", local=TRUE)$value
       ),
@@ -64,23 +64,11 @@ server <- function(input, output) {
   
 
   observeEvent(input$submit, {
-    df <- getSurveyData()
-    # print(df)
-    a<- df[,"question_id"]
-    b<- df[,"response"]
-    # print(a[[1]])
-    # print(b[[1]])
-    #data <- c(data, a=b)
-    #print(data)
-    
-    for (i in 1:5){
-      idd <- (df[i,2])
-      content <- toString(df[i,4])
-      print(idd)
-      print(content)
-      data <- c(data, df$idd = content)
-    }
-    print(data)
+    showModal(modalDialog(
+      title = "Questionnaire submitted",
+      "Click Start button if you have completed all the questions!"
+      
+    ))
   })
 }
 
