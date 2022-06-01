@@ -28,7 +28,16 @@ callback_tasks <- c(
 )
 
 
-
+callback_questions <- c(
+  "table.on('row-reorder', function(e, details, edit){",
+  "  var oldRows = [], newRows = [];",
+  "  for(let i=0; i < details.length; ++i){",
+  "    oldRows.push(details[i].oldData);",
+  "    newRows.push(details[i].newData);",
+  "  }",
+  "  Shiny.setInputValue('rowreorder_quest', {old: oldRows, new: newRows});",
+  "});"
+)
 
 
 function(input, output, session) {
@@ -452,7 +461,7 @@ function(input, output, session) {
                     row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
       }
       else if (input$tabs == "Task Consfiguration"){
-        RV$tasks <- RV$tasks %>% add_row(TASK = input$TASK, DESCRIPTION= input$DESCRIPTION,
+        RV$tasks <- RV$tasks %>% add_row(TASK = paste("Task"," ",dim(RV$tasks)[1]+1), DESCRIPTION= input$DESCRIPTION,
                                          TIME_MIN = input$TIME_MIN, TIME_SEC = input$TIME_SEC,
                                          COUNTDOWN_MESSAGE = input$COUNTDOWN_MESSAGE)
         write.table(x = RV$tasks, file = file.path(userDir, 'tasksdescrip.csv'), append = FALSE,
@@ -490,6 +499,7 @@ function(input, output, session) {
         if (input$tabs == "Task Consfiguration"){
           RV$tasks <- RV$tasks[-as.numeric(input$tasktable_rows_selected),]
           row.names(RV$tasks) <- NULL
+          RV$tasks$TASK <- paste("Task",c(1:dim(RV$tasks)[1]))
           write.table(x = RV$tasks, file = file.path(userDir, "tasksdescrip.csv"), append = FALSE,
                       row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
         }}
@@ -520,17 +530,33 @@ function(input, output, session) {
   output$tasktable <- renderDataTable(server=FALSE,{datatable(RV$tasks,
                                                         extensions = "RowReorder",  
                                                         callback = JS(callback_tasks),
-                                                        options = list(rowReorder = TRUE,order = list(list(0, 'asc'))))})
-  output$responsetable <- renderDataTable(responses(), options = list(scrollX = TRUE))
-  output$questiontable <- renderDataTable(questionss(), options = list(scrollX = TRUE))
+                                                        options = list(rowReorder = TRUE,order = list(list(0, 'asc')))
+                                                        )})
+  output$responsetable <- renderDataTable(responses(),options = list(scrollX = TRUE))
+  output$questiontable <- renderDataTable(server=FALSE,{datatable(questionss(), 
+                                                                  extensions = "RowReorder",  
+                                                                  callback = JS(callback_questions),
+                                                                  options = list(rowReorder = TRUE,order = list(list(0, 'asc')))
+                                                                  )})
   isolate(output$texttable <- renderDataTable(textconfig(), options = list(scrollX = TRUE)))
   
   observeEvent(input[["rowreorder"]], {
     old <- unlist(input[["rowreorder"]]$old)
     new <- as.numeric(unlist(input[["rowreorder"]]$new))
     RV$tasks[new, ] <- RV$tasks[old, ]   
+    RV$tasks$TASK <- paste("Task",c(1:dim(RV$tasks)[1]))
     userDir <- "CSV_inputs/"
     write.table(x = RV$tasks, file = file.path(userDir, "tasksdescrip.csv"), append = FALSE,
+                row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+    
+  })
+  
+  observeEvent(input[["rowreorder_quest"]], {
+    old <- unlist(input[["rowreorder_quest"]]$old)
+    new <- as.numeric(unlist(input[["rowreorder_quest"]]$new))
+    RV$survey[new, ] <- RV$survey[old, ]   
+    userDir <- "CSV_inputs/"
+    write.table(x = RV$survey, file = file.path(userDir, "questions.csv"), append = FALSE,
                 row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
     
   })
@@ -566,7 +592,6 @@ function(input, output, session) {
                                    width = NULL,
                                    status = "primary",
                                    DT::dataTableOutput("tasktable"),
-                                   textInput("TASK", "Task number"),
                                    textInput("DESCRIPTION", 'Task description'),
                                    numericInput('TIME_MIN','Minutes',10,
                                                 min = 0, max = 60),
