@@ -2,7 +2,6 @@ library(shiny)
 library(shinyjs)
 library(shinydashboard)
 library(DT)
-library(sodium)
 library(lubridate)
 library(stringr)
 library(base)
@@ -11,13 +10,12 @@ library(RSQLite)
 library(DBI)
 library(tidyverse)
 library(markdown)
-library(googlesheets4)
-library(googledrive)
 library(xlsx)
 library(shinysurveys)
+library(data.table)
+library(bcrypt)
+library(xml2)
 
-
-gs4_auth(cache = ".secrets", email = "juliasanchezmartinez98@gmail.com")
 
 
 function(input, output, session) {
@@ -38,19 +36,15 @@ function(input, output, session) {
   }
   
   # read configuration files
-  tasks.url <- "https://docs.google.com/spreadsheets/d/1Jz-J3aiXtgJFA2jLq9Ymqx6Tx3e_q79utqCHlWiwaZs/edit#gid=0"
-  task_description <- read_sheet(tasks.url, sheet=1)
-  # <- read.csv('CSV_inputs/tasksdescrip.csv')
-  #users <- read.csv('CSV_inputs/users.csv')
-  users.url = "https://docs.google.com/spreadsheets/d/1TLIuDp8WSYiqEUMJWWeM7jKpUmlf3bhoK5g9WvkPcC0/edit#gid=0"
-  users <- read_sheet(users.url, sheet=1)
   
-  responses.url <- "https://docs.google.com/spreadsheets/d/1OB1tlPc7Q8ao3W4yQhbP9kbT5BVv5upELNL0U1YGsLQ/edit#gid=0"
-  
-  questions.url <- "https://docs.google.com/spreadsheets/d/1hYgo1f90zLOEQthe_k_6qpj4p7TnikZ14LCj2Cf-OcE/edit#gid=0"
-  questions_drive <- read_sheet(questions.url, sheet=1)
+  task_description <- read.csv('CSV_inputs/tasksdescrip.csv')
+  users <- read.csv('CSV_inputs/users.csv')
+  text_config <- read.csv('CSV_inputs/text.csv', row.names = 1)
+  questions_drive <- read_csv("CSV_inputs/questions.csv", col_types = cols(x = col_character()), col_names = T)
+  app_responses <- as.data.frame(fread("response/app_results.tsv", fill=TRUE))
   
   
+
   
   ##################### Information to extract from csv's ########################
   user_name <- c()
@@ -64,6 +58,10 @@ function(input, output, session) {
     pass<- append(pass, toString((users$Password)[val]))
   }
   
+  admin_permit <- c()
+  for (val in x) {
+    admin_permit<- append(admin_permit, toString((users$Admin)[val]))
+  }
   
   task_number <- c()
   y = c(1:length(task_description$TASK))
@@ -75,14 +73,6 @@ function(input, output, session) {
     task_des<- append(task_des, toString((task_description$DESCRIPTION)[val]))
   }
   
-  # min <- c()
-  # sec <- c()
-  # for (val in y) {
-  #   t <- (str_split((task_description$TIME_MIN_SEC)[val],":"))
-  #   min <- append(min, as.integer(sapply(t,"[[",1)))
-  #   sec <- append(sec, as.integer(sapply(t,"[[",2)))
-  # }
-  # 
   min <- c()
   sec <- c()
   for (val in y) {
@@ -94,7 +84,8 @@ function(input, output, session) {
   
   credentials = data.frame(
     username_id = user_name,
-    passod   = sapply(pass,password_store),
+    passod = sapply(pass,hashpw),
+    admin = admin_permit,
     stringsAsFactors = F
   )
   ################################################################################
@@ -132,8 +123,7 @@ function(input, output, session) {
           Password <- isolate(input$passwd)
           if(length(which(credentials$username_id==Username))==1) { 
             pasmatch  <- credentials["passod"][which(credentials$username_id==Username),]
-            pasverify <- password_verify(pasmatch, Password)
-            if(pasverify) {
+            if (checkpw(Password,pasmatch)){
               USER$login <- TRUE
             } else {
               shinyjs::toggle(id = "nomatch", anim = TRUE, time = 1, animType = "fade")
@@ -148,6 +138,9 @@ function(input, output, session) {
     }    
   })
   
+  
+
+  
   output$logoutbtn <- renderUI({
     req(USER$login)
     tags$li(a("Logout",
@@ -157,6 +150,14 @@ function(input, output, session) {
                     font-weight: bold; margin:5px; padding: 10px;")
   })
   
+  
+  
+  observe({
+    if(USER$login == FALSE & file.exists("df.RData")){
+      file.remove("df.RData")
+    }
+  })
+  
   # Once the login becomes true 
   splash = FALSE
   PAGE <- reactiveValues(splash = splash)
@@ -164,27 +165,48 @@ function(input, output, session) {
     if (USER$login == TRUE & PAGE$splash == FALSE){ 
       sidebarMenu(
         menuItem("Description", tabName = "splash", icon = icon("th")),
-        if (input$userName == "admin"){
-          menuItem("Config", tabName = "config", icon = icon("th"))
+        #if (input$userName == "admin"){
+        if(credentials["admin"][which(credentials$username_id==isolate(input$userName)),]){
+          sidebarMenu(
+            menuItem("Configuration", tabName = "config", icon = icon("th")),
+            menuItem("Results", tabName = "results", icon = icon("th")),
+            menuItem("HTML", tabName = "init_markdown", icon = icon("th")),
+            menuItem("Engine links", tabName = "en_link", icon = icon("th"))
+              
+          )
         }
       )
+      
     }
     else if (USER$login == TRUE & PAGE$splash == TRUE){
+      
+      selected_in <- function(){
+        i<-match(input$userName,users$USER_NAME)
+        return(users$Engine[i])
+      }
+      
       sidebarMenu(
         menuItem("Task", tabName = "engine", icon = icon("th")),
-        if (input$userName == "admin"){
-          menuItem("Config", tabName = "config", icon = icon("th"))
+        #if (input$userName == "admin"){
+        if(credentials["admin"][which(credentials$username_id==isolate(input$userName)),]){
+          sidebarMenu(
+            menuItem("Configuration", tabName = "config", icon = icon("th")),
+            menuItem("Results", tabName = "results", icon = icon("th")),
+            menuItem("HTML", tabName = "init_markdown", icon = icon("th")),
+            menuItem("Engine links", tabName = "en_link", icon = icon("th")),
+            sidebarMenu(
+              selectInput("type_engine","Choose which engine you want to show:", choices = c("Engine 1" = 1, "Engine 2" = 2),selected = selected_in())
+              )
+          )
         }
       )
     }
   })
   
   # If someone writes an answer and clicks submit_answer, clear txt
-  observe({
-    if (!is.null(input$submit_answer)) {
-      if(input$submit_answer>0){
-        updateTextInput(session, "txt", value = "")
-      }
+  observeEvent(input$submit_answer,{
+    if(input$submit_answer>0){
+      updateTextInput(session, "txt", value = "")
     }
   })
   
@@ -257,8 +279,9 @@ function(input, output, session) {
       if (m<0) m<-0
     }
     
+    #df <- getSurveyData() 
+    load("df.RData")
     
-    df <- getSurveyData()
     row <- dim(df)[1]
     
     
@@ -270,18 +293,27 @@ function(input, output, session) {
       data <- c(data, TimeToCompleteSec = s)
       data <- c(data, TotalSecondsToComplete = m*60+s)
       data <- c(data, Pages = count())
-      #data <- c(data, Clicks = clicks())
+      data <- c(data, Load_Times = toString(array_of_times()))
+      data <- c(data, Load_Seconds = toString(array_of_sec()))
       data <- c(data, Task = task_number[input$submit_answer])
       i<-match(input$userName,users$USER_NAME)
-      data <- c(data, Engine = users$Engine[i])
-      # data <- c(data, Age = input$age)
-      # data <- c(data, Gender = input$gender)
-      # data <- c(data, Nationality = input$nationality)
-      # data <- c(data, Course = input$course)
-      # data <- c(data, Experience = input$experience)
+      # data <- c(data, Engine = users$Engine[i])
+      engine_fun <-function(){
+        if(credentials["admin"][which(credentials$username_id==isolate(input$userName)),]){
+          return(as.numeric(input$type_engine))
+        }
+        else{
+          return(users$Engine[i])
+        }
+      } 
+      data <- c(data, Engine = engine_fun())
+     
       for (i in 1:row){
         content <- toString(df[i,4])
-        data <- c(data, Q = content)
+        question_id <- toString(df[i,2])
+        data <- c(data, question_id = question_id)
+        data <- c(data, question_answer = content)
+        
       }
       data <- t(data)
       data
@@ -304,228 +336,191 @@ function(input, output, session) {
     }
     else{
       saveData(formData())
-      #saveData(formData(TimeToComplete("cola")))
     }
   })
   #############################################################################
   # Define function to save the data
   
   saveData <- function(data) {
-    responses_read <- read_sheet(responses.url, sheet=1)
-    # fileName1 <- sprintf("app_results.tsv")
-    # responsesDir <- file.path("response/")
-    # file = file.path(responsesDir, fileName1)
-    # 
-    # if (!file.exists(paste(responsesDir,fileName1,sep=""))){
-    #   write.table(x = data, file = file.path(responsesDir, fileName1), append = TRUE,
-    #               row.names = FALSE, col.names = TRUE, qmethod = "double")
-    # }
-    # else{
-    #   write.table(x = data, file = file.path(responsesDir, fileName1), append = TRUE,
-    #               row.names = FALSE, col.names = FALSE, qmethod = "double")
-    # }
-    
-    new_response <- data.frame(data)
-    
-    if (dim(responses_read)[1]==0 & dim(responses_read)[2]==0) {
-      sheet_write(responses.url, data = new_response, sheet = 1)
+    fileName1 <- sprintf("app_results.tsv")
+    responsesDir <- file.path("response/")
+    file = file.path(responsesDir, fileName1)
+    reading <- as.data.frame(fread("response/app_results.tsv", header = FALSE, fill=TRUE))
+    if (dim(reading)[2] == 0){
+      RV$answers <- data
+      write.table(x = data, file = file.path(responsesDir, fileName1), append = TRUE, 
+                  row.names = FALSE, col.names = TRUE, qmethod = "double")
       
     }
-    else {
-    sheet_append(responses.url, data = new_response, sheet = 1)}
-    
-    
+    else{
+      write.table(x = data, file = file.path(responsesDir, fileName1), append = TRUE,
+                  row.names = FALSE, col.names = FALSE, qmethod = "double") 
+      RV$answers <- as.data.frame(fread("response/app_results.tsv", header = TRUE, fill=TRUE))
+    }
   }
   
   # go back and forth questionnaire
   questions = reactiveVal(FALSE)
   observeEvent(input$questions, {
+    #print(questions())
     questions(TRUE)
+    updateTextInput(session, "html_frame", value = includeHTML("www/iframe2_link.html"))
+    updateTextInput(session, "html_frame_1", value = includeHTML("www/iframe1_link.html"))
   })
+  
+  
+  disableActionButton <- function(id,session) {
+    session$sendCustomMessage(type="jsCode",
+                              list(code= paste("$('#",id,"').prop('disabled',true)"
+                                               ,sep="")))
+  }
+  
   observeEvent(input$back, {
     questions(FALSE)
   })
   
   # Load Data
-  #RV <- reactiveValues(data = users, tasks = task_description )
-  #user_data <- reactive({RV$data})
   
-  # For the check functions
-  i=reactiveVal(0)
-  x<-reactiveVal(i)
-  y<-reactiveVal(i)
-  z<-reactiveVal(i)
-  p<-reactiveVal(i)
-  user_data <- reactivePoll(
-                            intervalMillis= 100,
-                            session = session,
-                            checkFunc = function() {
-                              
-                              x()
-                             
-                            },
-                            valueFunc = function() {
-                              read_sheet(users.url)
-                            })
   
-  #t_descrip <- reactive({RV$tasks})
-  t_descrip <- reactivePoll(
-                          intervalMillis= 100,
-                          session = session,
-                          checkFunc = function() {
-                            
-                            y()
-                            
-                          },
-                          valueFunc = function() {
-                            read_sheet(tasks.url)
-                          })
+  RV <- reactiveValues(data = users, tasks = task_description, survey = questions_drive, answers = app_responses, text = text_config )
+  user_data <- reactive({RV$data})
+  t_descrip <- reactive({RV$tasks})
+  questionss <-reactive({RV$survey})
+  responses <- reactive({RV$answers})
+  textconfig <- reactive({RV$text})
   
-  responses <- reactivePoll(
-                        intervalMillis= 100,
-                        session = session,
-                        checkFunc = function() {
-                          
-                          z()
-                          
-                        },
-                        valueFunc = function() {
-                          read_sheet(responses.url,sheet = 1)
-    })
   
-  questionss <- reactivePoll(
-    intervalMillis= 100,
-    session = session,
-    checkFunc = function() {
-      
-      p()
-      
-    },
-    valueFunc = function() {
-      read_sheet(questions.url)
-    })
+  observeEvent(input$change_survey_title, {
+    #text_config['survey_title',] <- input$survey_page_title
+    RV$text['survey_title',] <- input$survey_page_title
+    write.table(x = RV$text, file = file.path("CSV_inputs/", "text.csv"), append = FALSE,
+                row.names = TRUE, col.names = TRUE, sep = ",", qmethod = "double")
+   
+    
+  })
+  observeEvent(input$change_task_title, {
+    #text_config['survey_title',] <- input$survey_page_title
+    RV$text['task_page_title',] <- input$task_page_title
+    write.table(x = RV$text, file = file.path("CSV_inputs/", "text.csv"), append = FALSE,
+                row.names = TRUE, col.names = TRUE, sep = ",", qmethod = "double")
+    
+    
+  })
   
-  #A test action button
+
+  observeEvent(input$change_finished_tasks_title, {
+    #text_config['survey_title',] <- input$survey_page_title
+    RV$text['finished_tasks_title',] <- input$finished_tasks_title
+    write.table(x = RV$text, file = file.path("CSV_inputs/", "text.csv"), append = FALSE,
+                row.names = TRUE, col.names = TRUE, sep = ",", qmethod = "double")
+  })
+  
+  observeEvent(input$change_finished_tasks_descrip, {
+    RV$text['finished_tasks_descrip',] <- input$finished_tasks_descrip
+    
+    write.table(x =  RV$text, file = file.path("CSV_inputs/", "text.csv"), append = FALSE,
+                row.names = TRUE, col.names = TRUE, sep = ",", qmethod = "double")
+  })
+  
+  
+  #Insert a new row 
   observeEvent(input$new_row, {
     
-    if (input$userName == "admin") {
-      #userDir <- "CSV_inputs/"
+    #if (input$userName == "admin") {
+    if(credentials["admin"][which(credentials$username_id==isolate(input$userName)),]){
+      userDir <- "CSV_inputs/"
       if (input$tabs =="Users"){
         name <- input$uname
         pass <- input$passs
         engine <- as.numeric(input$eng)
-        # RV$data <- RV$data %>% add_row(USER_NAME = name, Password = pass, Engine = engine)
-        new_user <- data.frame(USER_NAME = name, Password = pass, Engine = engine)
-        # write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
-        #             row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
-        sheet_append(users.url, data = new_user, sheet = 1)
-        i(i()+1)
-        x(i())
-        
-        }
+        permit <- as.logical(input$permit)
+        RV$data <- RV$data %>% add_row(USER_NAME = name, Password = pass, Engine = engine, Admin=permit)
+        write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
+                    row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+      }
       else if (input$tabs == "Task Consfiguration"){
-        new_task <- data.frame(TASK = input$TASK, DESCRIPTION= input$DESCRIPTION,
-                               TIME_MIN = input$TIME_MIN, TIME_SEC = input$TIME_SEC,
-                               COUNTDOWN_MESSAGE = input$COUNTDOWN_MESSAGE)
-        
-        # RV$tasks <- RV$tasks %>% add_row(TASK = input$TASK, DESCRIPTION= input$DESCRIPTION,
-        #                                  TIME_MIN_SEC = input$TIME_MIN_SEC,
-        #                                  COUNTDOWN_MESSAGE = input$COUNTDOWN_MESSAGE)
-        # write.table(x = RV$tasks, file = file.path(userDir, 'tasksdescrip.csv'), append = FALSE,
-        #             row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
-        sheet_append(tasks.url, data = new_task, sheet = 1)
-        i(i()+1)
-        y(i())
-        
-        
+        RV$tasks <- RV$tasks %>% add_row(TASK = input$TASK, DESCRIPTION= input$DESCRIPTION,
+                                         TIME_MIN = input$TIME_MIN, TIME_SEC = input$TIME_SEC,
+                                         COUNTDOWN_MESSAGE = input$COUNTDOWN_MESSAGE)
+        write.table(x = RV$tasks, file = file.path(userDir, 'tasksdescrip.csv'), append = FALSE,
+                    row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
       }
       else if (input$tabs == "Questionnaire"){
         
-        print(input$question)
-        print(input$option)
-        print(input$input_type)
-        print(input$input_id)
+        RV$survey <- RV$survey %>% add_row(question = input$question , option= input$option ,
+                                           input_type  = input$input_type, input_id = input$input_id,
+                                           dependence  = NA, dependence_value = NA, required = TRUE)
         
-        new_question <- data.frame(question = input$question , option= input$option ,
-                                   input_type  = input$input_type, input_id = input$input_id,
-                                   dependence  = 'NA', dependence_value = 'NA', required = TRUE)
         
-        # RV$tasks <- RV$tasks %>% add_row(TASK = input$TASK, DESCRIPTION= input$DESCRIPTION,
-        #                                  TIME_MIN_SEC = input$TIME_MIN_SEC,
-        #                                  COUNTDOWN_MESSAGE = input$COUNTDOWN_MESSAGE)
-        # write.table(x = RV$tasks, file = file.path(userDir, 'tasksdescrip.csv'), append = FALSE,
-        #             row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
-        sheet_append(questions.url, data = new_question, sheet = 1)
-        i(i()+1)
-        p(i())
-        
+        write.table(x = RV$survey, file = file.path(userDir, 'questions.csv'), append = FALSE,
+                    row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
         
       }
-      else if (input$tabs == "Responses"){
-        
-      }
+      
       
     }
   }) 
   
+  # Delete Row
   observeEvent(input$delete_row, {
-    #userDir <- "CSV_inputs/"
-    if (input$userName == "admin"){
+    userDir <- "CSV_inputs/"
+    #if (input$userName == "admin"){
+    if(credentials["admin"][which(credentials$username_id==isolate(input$userName)),]){
       if (!is.null(input$usertable_rows_selected)) {
         if (input$tabs =="Users"){
-          row_num <- toString(input$usertable_rows_selected+1)
-          range_delete(users.url, sheet = 1, range = cell_rows(input$usertable_rows_selected+1), shift = NULL)
-          i(i()+1)
-          x(i())
-          
-          # RV$data <- RV$data[-as.numeric(input$usertable_rows_selected),]
-          # row.names(RV$data) <- NULL
-          # write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
-          #             row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
-          }}
+          RV$data <- RV$data[-as.numeric(input$usertable_rows_selected),]
+          row.names(RV$data) <- NULL
+          write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
+                      row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+        }}
       if(!is.null(input$tasktable_rows_selected)){
         if (input$tabs == "Task Consfiguration"){
-          # RV$tasks <- RV$tasks[-as.numeric(input$tasktable_rows_selected),]
-          # row.names(RV$tasks) <- NULL
-          # write.table(x = RV$tasks, file = file.path(userDir, "tasksdescrip.csv"), append = FALSE,
-          #             row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
-          row_num <- toString(input$tasktable_rows_selected+1)
-          range_delete(tasks.url, sheet = 1, range = cell_rows(input$tasktable_rows_selected+1), shift = NULL)
-          i(i()+1)
-          y(i())
+          RV$tasks <- RV$tasks[-as.numeric(input$tasktable_rows_selected),]
+          row.names(RV$tasks) <- NULL
+          write.table(x = RV$tasks, file = file.path(userDir, "tasksdescrip.csv"), append = FALSE,
+                      row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
         }}
-      else if (input$tabs == "Questionnaire"){
-        row_num <- toString(input$questiontable_rows_selected+1)
-        range_delete(questions.url, sheet = 1, range = cell_rows(input$questiontable_rows_selected+1), shift = NULL)
-        i(i()+1)
-        p(i())
-        
-      }
-      else if (input$tabs == "Responses"){
-        row_num <- toString(input$responsetable_rows_selected+1)
-        range_delete(responses.url, sheet = 1, range = cell_rows(input$responsetable_rows_selected+1), shift = NULL)
-        i(i()+1)
-        z(i())
-        
-      }
+      if(!is.null(input$questiontable_rows_selected )){
+        if (input$tabs == "Questionnaire"){
+          RV$survey <- RV$survey[-as.numeric(input$questiontable_rows_selected),]
+          row.names(RV$survey) <- NULL
+          write.table(x = RV$survey, file = file.path(userDir, "questions.csv"), append = FALSE,
+                      row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+        }}
       
     }
     
   }) 
+  observeEvent(input$delete_row_response, {
+    if(!is.null(input$responsetable_rows_selected )){
+      #if (input$tabs == "Responses") {
+        RV$answers <- RV$answers[-as.numeric(input$responsetable_rows_selected),]
+        row.names(RV$answers) <- NULL
+        write.table(x = RV$answers, file = file.path('response/', "app_results.tsv"), append = FALSE,
+                    row.names = FALSE, col.names = TRUE, qmethod = "double") # MIRAR SI AIXO SURT BE
+      #}
+    }
+  })
   
-
+  
   output$usertable <- renderDataTable(user_data(), options = list(scrollX = TRUE))
-  output$tasktable <- renderDataTable(t_descrip(), options = list(scrollX = TRUE))
+  isolate(output$tasktable <- renderDataTable(t_descrip(), options = list(scrollX = TRUE)))
   output$responsetable <- renderDataTable(responses(), options = list(scrollX = TRUE))
   output$questiontable <- renderDataTable(questionss(), options = list(scrollX = TRUE))
+  isolate(output$texttable <- renderDataTable(textconfig(), options = list(scrollX = TRUE)))
   
   
   
   # definex el tab de configuració
+  
   configtab <- 
     tabItem(tabName ="config",
-            tabsetPanel(type = "tabs", id = "tabs", footer = list(actionButton("new_row", "Add new row"),
-                                                                  actionButton("delete_row","Delete a row")),
+            fluidPage(
+              tabsetPanel(id="subtabs", type="pills",
+              tabPanel("General Configurations",
+                     tabsetPanel(type = "tabs", id = "tabs", 
+                        footer = list(div(actionButton("new_row", "Add new row"),style="float:left"),
+                                                                  div(actionButton("delete_row","Delete a row"),style="float:right")),
                         tabPanel("Users", 
                                  box(
                                    width = NULL,
@@ -535,8 +530,9 @@ function(input, output, session) {
                                    textInput('passs','Password'),
                                    selectInput("eng", ("Engine"),
                                                choices = list("1" = 1, "2" = 2), selected = 2),
-                                   # actionButton("new_row", "Add new row"),
-                                   # actionButton("delete_row","Delete a row"),
+                                   selectInput("permit", ("Admin Permit"),
+                                               choices = list("TRUE" = TRUE, "FALSE" = FALSE), selected = FALSE),
+                                   
                                  )
                         ),
                         tabPanel("Task Consfiguration", 
@@ -546,11 +542,11 @@ function(input, output, session) {
                                    DT::dataTableOutput("tasktable"),
                                    textInput("TASK", "Task number"),
                                    textInput("DESCRIPTION", 'Task description'),
-                                   textInput('TIME_MIN','Minutes '),
-                                   textInput('TIME_SEC','Seconds'),
+                                   numericInput('TIME_MIN','Minutes',10,
+                                                min = 0, max = 60),
+                                   numericInput('TIME_SEC','Seconds', 0,
+                                                min = 0, max = 60),
                                    textInput('COUNTDOWN_MESSAGE','Countdown Message'),
-                                   # actionButton("new_row", "Add new row"),
-                                   # actionButton("delete_row","Delete a row"),
                                  )
                                  
                                  
@@ -564,59 +560,140 @@ function(input, output, session) {
                                    textInput("option", 'Option'),
                                    textInput('input_type','Input Type '),
                                    textInput('input_id','Input ID'),
-                                   # actionButton("new_row", "Add new row"),
-                                   # actionButton("delete_row","Delete a row"),
                                  )
-                        ),
-                        tabPanel("Responses",
+                        ))),
+            tabPanel("Text Configurations",
+                   
                                  box(
                                    width = NULL,
                                    status = "primary",
-                                   DT::dataTableOutput("responsetable"),
-                                   downloadButton("downloadData", "Download")
-                                   # actionButton("new_row", "Add new row"),
-                                   # actionButton("delete_row","Delete a row"),
+                                   DT::dataTableOutput("texttable"),
+                                   splitLayout(cellWidths = c("60%", "40%"),div(textInput("survey_page_title", "Survey Page Title")), div(style = "margin-top: 25px;",actionButton("change_survey_title","Change survey title"))),
+                                   splitLayout(cellWidths = c("60%", "40%"),div(textInput("task_page_title", "Task Page Title")), div(style = "margin-top: 25px;",actionButton("change_task_title","Change task title"))),
+                                   splitLayout(cellWidths = c("60%", "40%"),div(textInput("finished_tasks_title", "Finish tasks title")), div(style = "margin-top: 25px;", actionButton("change_finished_tasks_title","Change finish task title"))),
+                                   splitLayout(cellWidths = c("60%", "40%"),div(textInput("finished_tasks_descrip", "Finish tasks description")), div(style = "margin-top: 25px;", actionButton("change_finished_tasks_descrip","Change finish task description"))),
                                  )
-                        )
+                     
             )
-    )
+            )
+    ))
+  
+  resultstab <- tabItem(
+    tabName="results",
+    tabsetPanel(type = "tabs", id = "tabs", footer = list(#actionButton("new_row", "Add new row"),
+                                                          actionButton("delete_row_response","Delete a row")),
+    tabPanel("Responses",
+             box(
+               width = NULL,
+               status = "primary",
+               DT::dataTableOutput("responsetable"),
+               downloadButton("downloadData", "Download"),
+               actionButton("clear_responses", "Clear all the responses"),
+             )
+    ))
+  )
+  
+  markdowntab <- tabItem(
+    tabName="init_markdown",
+    tabsetPanel(type = "tabs", id = "tabss", 
+      tabPanel("HTML",
+               box(
+                 width = NULL,
+                 status = "primary",
+                 htmlOutput("render_after_upload"),
+                 fileInput("file1", "Choose html file to include in the initial explanation",
+                           multiple = FALSE,
+                           accept = c(".html")),
+                 downloadButton("downloadMardown", "Download current html"),
+               )
+      ))
+  )
+  
+  enginetab <- isolate(tabItem(
+    tabName="en_link",
+    tabsetPanel(type = "tabs", id = "tabss", 
+                tabPanel("Change the iframes",
+                         # Write something like please change only the src link!
+                         box(
+                           width = NULL,
+                           status = "primary",
+                           h3("Src engine 1"),
+                           textInput("html_frame_1", "Please change only the iframe src:", value = isolate(includeHTML(file.path("www/iframe1_link.html")))),
+                           actionButton("save_frame_1","Save Iframe 1"),
+                           h3("Src engine 2"),
+                           textInput("html_frame", "Please change only the iframe src:", value = isolate(includeHTML(file.path("www/iframe2_link.html")))),
+                           actionButton("save_frame","Save Iframe 2")
+                         )
+                         
+                ))
+  ))
+  
+  observeEvent(input$save_frame, {
+    write.table(input$html_frame, 
+                file="www/iframe2_link.html", 
+                quote = FALSE,
+                col.names = FALSE,
+                row.names = FALSE)
+    updateTextInput(session, "html_frame", value = includeHTML("www/iframe2_link.html"))
+    
+    
+    
+  })
+  
+  observeEvent(input$save_frame_1, {
+    write.table(input$html_frame_1, 
+                file="www/iframe1_link.html", 
+                quote = FALSE,
+                col.names = FALSE,
+                row.names = FALSE)
+    updateTextInput(session, "html_frame_1", value = includeHTML("www/iframe1_link.html"))
+    
+    
+    
+  })
+  
+  
   #final tab item config
-  
-  
   output$body <- renderUI({
     shiny:::hasCurrentRestoreContext()
     if (USER$login == TRUE ) {
       i<-match(input$userName,users$USER_NAME)
       num_engine <- paste("tab",users$Engine[i],sep="")
+      num_engine_admin <- paste("tab",input$type_engine,sep="")
+      #num_engine <- paste("www/iframe",users$Engine[i],".html",sep="")
+      
       if (PAGE$splash == FALSE ){
-        if (input$userName == "admin"){
-        tabItems(
-          tabItem(tabName ="splash", class = "active",
-                  fluidRow(
-                    if (questions() == FALSE){
-                      box(width = 12,
-                          includeMarkdown(file.path("markdown.rmd")),
-                          #includeMarkdown(rmarkdown::render("markdown.Rmd")),
-                          actionButton("questions", "Go to questionnaire", class = "btn-primary"),)}
-                    else{
-                      fluidRow(
-                      box(width = 12,
-                          #surveyOutput(read.csv("questions.csv"))
-                          surveyOutput( questions_drive)
-                          #surveyOutput(df=readRDS('questions.rds'))
+        #if (input$userName == "admin"){
+        if(credentials["admin"][which(credentials$username_id==isolate(input$userName)),]){
+          tabItems(
+            tabItem(tabName ="splash", class = "active",
+                    fluidRow(
+                      if (questions() == FALSE){
+                        box(width = 12,
+                            #includeMarkdown(file.path("markdown.rmd")),
+                            includeHTML("init_html.html"),
+                            actionButton("questions", "Go to questionnaire", class = "btn-primary"),)}
+                      else{
+                        fluidRow(
+                          column(12, align = "center",
+                          #div(h2(isolate(textconfig()["survey_title",]))),
+                          box(
+                              width = 12,
+                              div(id="btitle",h2(isolate(textconfig()["survey_title",]))),
+                              div(id="bSurvey",source("shiny_survey.R",local = TRUE)$value),
+                              div(style = "height:20px;"),
+                              div(actionButton("back", "Back", class = "btn-primary"), style="float:right"),
+                              uiOutput("showbuttons")
                           ),
-                      box(width = 12,
-                          # https://shiny.rstudio.com/articles/html-ui.html
-                          # puedo hacer lo mismo en html por el tema de que lo puedo cambiar en el usuario admin
-                          #source('render_survey.R'),
-                          #source("CSV_inputs/questionnaire.R", local=TRUE)$value,
-                          div(actionButton("start", "Start", class = "btn-primary"), style="float:left"),
-                          div(actionButton("back", "Back", class = "btn-primary"), style="float:right")
-                      ))
-                      #source("render_survey.R", local=TRUE)$value
-                      }
-                  )),
-          configtab)
+                          #uiOutput("showbuttons")
+                          )
+                        )
+                        }
+                    )),
+            configtab,
+            resultstab,
+            markdowntab,
+            isolate(enginetab))
         }
         else {
           tabItems(
@@ -624,33 +701,51 @@ function(input, output, session) {
                     fluidRow(
                       if (questions() == FALSE){
                         box(width = 12,
-                            includeMarkdown(file.path("markdown.rmd")),
-                            #includeMarkdown(rmarkdown::render("markdown.Rmd")),
+                            #includeMarkdown(file.path("markdown.rmd")),
+                            includeHTML("init_html.html"),
                             actionButton("questions", "Go to questionnaire", class = "btn-primary"),)}
                       else{
+                        # fluidRow(
+                        #   box(width = 12,
+                        #       surveyOutput(df=read_csv("CSV_inputs/questions.csv", col_types = cols(x = col_character()), col_names = T)),
+                        #       # survey_title= "User Survey"
+                        #       survey_title = input$survey_title
+                        #   ),
+                        #   box(width = 12,
+                        #       div(actionButton("start", "Start", class = "btn-primary"), style="float:left"),
+                        #       div(actionButton("back", "Back", class = "btn-primary"), style="float:right")
+                        #   ))
                         fluidRow(
-                        box(width = 12,
-                            #surveyOutput(read.csv("questions.csv"))
-                            surveyOutput(questions_drive)
-                            #surveyOutput(df=readRDS('questions.rds'))
-                        ),
-                        box(width = 12,
-                            # https://shiny.rstudio.com/articles/html-ui.html
-                            # puedo hacer lo mismo en html por el tema de que lo puedo cambiar en el usuario admin
-                            #source("CSV_inputs/questionnaire.R", local=TRUE)$value,
-                            div(actionButton("start", "Start", class = "btn-primary"), style="float:left"),
-                            div(actionButton("back", "Back", class = "btn-primary"), style="float:right")
-                        ))}
+                          column(12, align = "center",
+                                 #div(isolate(h2(textconfig()["survey_title",]))),
+                                 box(
+                                   width = 12,
+                                   div(id="btitle",h2(isolate(textconfig()["survey_title",]))),
+                                   div(id="bSurvey",source("shiny_survey.R",local = TRUE)$value),
+                                   div(style = "height:20px;"),
+                                   div(actionButton("back", "Back", class = "btn-primary"), style="float:right"),
+                                   uiOutput("showbuttons")
+                                 ),
+                                 #uiOutput("showbuttons")
+                                 )
+                        )
+                        }
                     )))
           
         }}
       else{
-        if (input$userName == "admin"){
+        #if (input$userName == "admin"){
+        if(credentials["admin"][which(credentials$username_id==isolate(input$userName)),]){
           tabItems(
             tabItem(tabName ="engine", class = "active",
                     fluidRow(
-                      h1("Evaluating a Search Engine"),
+                      #h1("Evaluating a Search Engine"),
+                      #h1(input$tasks_title),
+                      column(12, align = "center",
+                      #h2(isolate(textconfig()["task_page_title",])),
                       box(width = 12, 
+                          div(id="btitle",h2(isolate(textconfig()["task_page_title",]))),
+                          div(id="bSurvey",
                           textOutput("task"),
                           tags$head(tags$style("#task{color: black;
                                    font-size: 26px;
@@ -662,26 +757,36 @@ function(input, output, session) {
                                    font-size: 20px;``
                                    }"
                           )),
-                          textOutput('timeleft'),
+                          div(style="height:5px;"),
+                          div(id="bCountdown",h4(textOutput('timeleft'))),
                           tags$head(tags$style("#timeleft{color: red;
                                    font-size: 20px;``
                                    }"
                           )),
-                          htmlOutput(num_engine),
+                          div(style="height:7px;"),
+                          htmlOutput(num_engine_admin),
+                          div(style="height:5px;"),
                           textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "100px"),
                           actionButton("submit_answer", "Submit", class = "btn-primary"),
-                      ))),
-            configtab
+                      ))))),
+            configtab,
+            resultstab,
+            markdowntab,
+            isolate(enginetab)
           )
           
         }
-        
         else {
           tabItems(
             tabItem(tabName ="engine", class = "active",
                     fluidRow(
-                      h1("Evaluating a Search Engine"),
+                      #h1("Evaluating a Search Engine"),
+                      #h1(input$tasks_title),
+                      column(12, align = "center",
+                      #h2(isolate(textconfig()["task_page_title",])),
                       box(width = 12, 
+                          div(id="btitle",h2(isolate(textconfig()["task_page_title",]))),
+                          div(id="bSurvey",
                           textOutput("task"),
                           tags$head(tags$style("#task{color: black;
                                    font-size: 26px;
@@ -693,16 +798,19 @@ function(input, output, session) {
                                    font-size: 20px;``
                                    }"
                           )),
-                          textOutput('timeleft'),
+                          div(style="height:5px;"),
+                          div(id="bCountdown",h4(textOutput('timeleft'))),
                           tags$head(tags$style("#timeleft{color: red;
                                    font-size: 20px;``
                                    }"
                           )),
+                          div(style="height:7px;"),
                           htmlOutput(num_engine),
+                          div(style="height:5px;"),
                           textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "100px"),
                           actionButton("submit_answer", "Submit", class = "btn-primary"),
-                      )))
-          )
+                      )))))
+          ) 
         }
       }
       
@@ -712,9 +820,39 @@ function(input, output, session) {
     }
   })
   
+  sub <- reactiveFileReader(1000, session, "submitted.rds", readRDS)
+  observe(
+    if(sub()){
+      disableActionButton("back",session)
+      output$showbuttons <- renderUI({
+        #fluidRow(
+            #column(width = 12, 
+            div(actionButton("start", "Start", class = "btn-primary"), style="float:left")#)
+        #)
+        
+      })
+      saveRDS(FALSE, file= "submitted.rds")
+    }
+  )
+  
+  # output$showbuttons <- renderUI({
+  #     
+  #     #sub <- readRDS("submitted.rds")
+  #     sub <- reactiveFileReader(1000, session, "submitted.rds", readRDS)
+  #       if(sub()) {
+  #           box(width = 12,
+  #               div(actionButton("start", "Start", class = "btn-primary"), style="float:left"),
+  #               div(actionButton("back", "Back", class = "btn-primary"), style="float:right")
+  #           )
+  #       }
+  # 
+  #     })
+  
+  
+  
   output$task <- renderText({
     if (input$submit_answer+1 > length(task_number)){
-      "You have finished!"
+      isolate(textconfig()["finished_tasks_title",])
     }
     else{
       paste(task_number[input$submit_answer +1],"of",length(task_number))
@@ -723,7 +861,8 @@ function(input, output, session) {
   
   output$descrip <- renderText({
     if (input$submit_answer+1 > length(task_number)){
-      "Congratulations!"
+      if(!credentials["admin"][which(credentials$username_id==isolate(input$userName)),]){file.remove('df.RData')}
+      isolate(textconfig()["finished_tasks_descrip",])
     }
     else{
       task_des[input$submit_answer +1]
@@ -731,23 +870,26 @@ function(input, output, session) {
     
   })
   
-  #renderSurvey()
   observeEvent(input$start,{
     PAGE$splash <- TRUE 
-    
+    updateTextInput(session, "html_frame", value = includeHTML("www/iframe2_link.html"))
+    updateTextInput(session, "html_frame_1", value = includeHTML("www/iframe1_link.html"))
   })
+  
+
   
   
   getPage1<-function() {
     return(includeHTML("www/iframe1.html"))
   }
+  
   output$tab1<-renderUI({getPage1()})
-  count <- reactive({ input$count }) 
+  
+  # count <- reactive({ input$count }) 
   
   observeEvent(input$submit_answer,{
     output$tab1<-renderUI({getPage1()})
     count <- reactive({ input$count }) 
-    #clicks <- reactive({ input$click }) 
   })
   
   
@@ -756,35 +898,80 @@ function(input, output, session) {
   }
   output$tab2<-renderUI({getPage2()})
   count <- reactive({ input$count })
-  #clicks <- reactive({ input$click }) 
+  array_of_times <- reactive({input$time_stamp_load})
+  array_of_sec <- reactive({input$time_stamp_load_seconds})
   
   observeEvent(input$submit_answer,{
+    
     output$tab2<-renderUI({getPage2()})
     count <- reactive({ input$count }) 
-    #clicks <- reactive({ input$click }) 
+    array_of_times <- reactive({input$time_stamp_load})
+    array_of_sec <- reactive({input$time_stamp_load_seconds})
   })
   
   output$timeleft <- renderText({
     paste("Time left:", minutes(), "M", seconds(), "S")
   })
   
-
+  
   output$downloadData <- downloadHandler(
     filename = function() {
       paste("data-", Sys.Date(), ".xlsx", sep="")
     },
     content = function(file) {
+      
       openxlsx::write.xlsx(responses(), file)
     }
   )
   
   
-  observeEvent(input$submit, {
-    showModal(modalDialog(
-      title = "Questionnaire submitted",
-      "Click Start button if you have completed all the questions!"
-      
-    ))
+  observeEvent(input$clear_responses,{
+    
+    fileName1 <- sprintf("app_results.tsv")
+    responsesDir <- file.path("response/")
+    file = file.path(responsesDir, fileName1)
+    RV$answers <- data.frame()
+    write.table(x = RV$answers, file = file.path(responsesDir, fileName1), append = FALSE, 
+                row.names = FALSE, col.names = FALSE, qmethod = "double")
+    
+    
+  })
+  
+  getHTML<-function() {
+    return(includeHTML("init_html.html"))
+  }
+  
+  
+  observeEvent(input$file1,{
+    
+     html_dat <- read_html(input$file1$datapath)
+     html_dat<- paste(as.character(html_dat), collapse = "\n")
+    write.table(html_dat, 
+                file='init_html.html', 
+                quote = FALSE,
+                col.names = FALSE,
+                row.names = FALSE)
+    output$render_after_upload<-renderUI({getHTML()})
+  })
+  
+  output$downloadMardown <- downloadHandler(
+    filename = function() {
+      "init_html.html"
+    },
+    content = function(file) {
+      html_dat <- read_html("init_html.html")
+      html_dat<- paste(as.character(html_dat), collapse = "\n")
+      write.table(html_dat, 
+                  file=file, 
+                  quote = FALSE,
+                  col.names = FALSE,
+                  row.names = FALSE)
+    }
+  )
+  
+  observeEvent(input$type_engine,{
+    updateTextInput(session, "html_frame", value = includeHTML("www/iframe2_link.html"))
+    updateTextInput(session, "html_frame_1", value = includeHTML("www/iframe1_link.html"))
   })
   
 }

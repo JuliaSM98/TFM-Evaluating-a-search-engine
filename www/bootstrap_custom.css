@@ -1,0 +1,39 @@
+ * { font-family: "Sans-serif"; }
+ 
+ h1 {
+  font-weight: bold;
+  /*color: #fff;*/
+  /*font-size: 32px;*/
+}
+
+h2 {
+  font-weight: bold;
+  /*color: #fff;
+  font-size: 24px;*/
+}
+h4 {
+  font-weight: bold;
+  /*color: #fff;
+  font-size: 24px;*/
+}
+
+#btitle {
+  border-style: dotted;
+  border-width: medium;
+  border-color: #585858;
+  }
+
+#bSurvey {
+  border: 2px solid #3c8dbc;
+  padding: 10px;
+  border-radius: 25px;
+  /*color: #3c8dbc*/
+}
+#bCountdown {
+  border: 5px solid red;
+  padding: 10px;
+  border-radius: 25px;
+  width: fit-content;
+  background-color: #fae8e8;
+}
+

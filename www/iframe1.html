@@ -1,21 +1,60 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <style>
-            iframe{
-                width: 100%;
-                height: 600px;
-                border: 2px solid #ccc;
-            }
-        </style>
-        <script> 
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="jquery-ui.css" />
+  <script src="jquery-ui.js"></script>
+    <style>
+         #includedContent {
+	  width: 100%;
+	  height: 100%;
+	  border: none;    
+	  background: #eee ;
+	  z-index: 1;
+	}
+
+	#resizable {
+	  width: 100%;
+	  height: 200px;
+	  background: #fff;
+	  border: none; 
+	  border-bottom-style: dotted;
+    	  border-bottom-width: medium;
+    	  border-bottom-color: #585858;
+	  z-index: 9;
+	}
+	
+    </style>
+<script>
               var countInput = 0;
+              var arr=[];
+              var arr2=[];
+    </script>
+    <script> 
+    $(function(){
+      $("#includedContent").load("iframe1_link.html"); 
+    });
+    </script>
+</head>
+<body>
+    <div id="resizable"> <div id="includedContent"></div> </div>
+    <script>
+    WaitUntil(function(){return typeof $("#resizable").resizable !=="undefined"}, function(){
+	$('#resizable').resizable({
+		handles: 's',
+      		start: function(event, ui) {
+        	$('#includedContent').css('pointer-events','none');
+         	},
+    		stop: function(event, ui) {
+        	$('#includedContent').css('pointer-events','auto');
+      		}
+  	});
+    });
+    </script>
+    <script>   
+            Shiny.setInputValue("count",countInput);
+            Shiny.setInputValue("time_stamp_load",arr);
+            Shiny.setInputValue("time_stamp_load_seconds",arr2);
         </script>
-    </head>
-    <body>
-        <iframe id="ifr" src="https://aiproc.linkeddata.es/" ></iframe>
-        <script>    
-                Shiny.setInputValue("count",countInput); 
-        </script>
-    </body>
+</body>
 </html>
