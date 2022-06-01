@@ -16,6 +16,19 @@ library(data.table)
 library(bcrypt)
 library(xml2)
 
+callback_tasks <- c(
+  "table.on('row-reorder', function(e, details, edit){",
+  "  var oldRows = [], newRows = [];",
+  "  for(let i=0; i < details.length; ++i){",
+  "    oldRows.push(details[i].oldData);",
+  "    newRows.push(details[i].newData);",
+  "  }",
+  "  Shiny.setInputValue('rowreorder', {old: oldRows, new: newRows});",
+  "});"
+)
+
+
+
 
 
 function(input, output, session) {
@@ -504,10 +517,23 @@ function(input, output, session) {
   
   
   output$usertable <- renderDataTable(user_data(), options = list(scrollX = TRUE))
-  isolate(output$tasktable <- renderDataTable(t_descrip(), options = list(scrollX = TRUE)))
+  output$tasktable <- renderDataTable(server=FALSE,{datatable(RV$tasks,
+                                                        extensions = "RowReorder",  
+                                                        callback = JS(callback_tasks),
+                                                        options = list(rowReorder = TRUE,order = list(list(0, 'asc'))))})
   output$responsetable <- renderDataTable(responses(), options = list(scrollX = TRUE))
   output$questiontable <- renderDataTable(questionss(), options = list(scrollX = TRUE))
   isolate(output$texttable <- renderDataTable(textconfig(), options = list(scrollX = TRUE)))
+  
+  observeEvent(input[["rowreorder"]], {
+    old <- unlist(input[["rowreorder"]]$old)
+    new <- as.numeric(unlist(input[["rowreorder"]]$new))
+    RV$tasks[new, ] <- RV$tasks[old, ]   
+    userDir <- "CSV_inputs/"
+    write.table(x = RV$tasks, file = file.path(userDir, "tasksdescrip.csv"), append = FALSE,
+                row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+    
+  })
   
   
   
