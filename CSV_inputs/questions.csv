@@ -5,6 +5,5 @@
 "What is your Gender?","Male","select","gender",NA,NA,TRUE
 "What is your Gender?","Female","select","gender",NA,NA,TRUE
 "What is your Gender?","Other","select","gender",NA,NA,TRUE
-"Nationality","Your Answer","text","nationality",NA,NA,TRUE
-"What kind of experience do you have with this kind of search engines?","Your Answer","text","experience",NA,NA,TRUE
 "Current course","Your Answer","text","course",NA,NA,TRUE
+"What kind of experience do you have with this kind of search engines?","Your Answer","text","experience",NA,NA,TRUE

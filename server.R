@@ -59,12 +59,11 @@ function(input, output, session) {
   
   # read configuration files
   
-  task_description <- read.csv('CSV_inputs/tasksdescrip.csv')
-  users <- read.csv('CSV_inputs/users.csv')
   text_config <- read.csv('CSV_inputs/text.csv', row.names = 1)
   questions_drive <- read_csv("CSV_inputs/questions.csv", col_types = cols(x = col_character()), col_names = T)
   app_responses <- as.data.frame(fread("response/app_results.tsv", fill=TRUE))
-  
+  task_description <- read.csv('CSV_inputs/tasksdescrip.csv')
+  users <- read.csv('CSV_inputs/users.csv')
   
 
   
@@ -101,7 +100,6 @@ function(input, output, session) {
     min <- append(min, as.integer((task_description$TIME_MIN)[val]))
     sec <- append(sec, as.integer((task_description$TIME_SEC)[val]))
   }
-  
   
   
   credentials = data.frame(
@@ -185,7 +183,8 @@ function(input, output, session) {
   PAGE <- reactiveValues(splash = splash)
   output$sidebarpanel <- renderUI({
     if (USER$login == TRUE & PAGE$splash == FALSE){ 
-      sidebarMenu(
+      sidebarMenu( 
+        id = "des",
         menuItem("Description", tabName = "splash", icon = icon("th")),
         #if (input$userName == "admin"){
         if(credentials["admin"][which(credentials$username_id==isolate(input$userName)),]){
@@ -212,10 +211,10 @@ function(input, output, session) {
         #if (input$userName == "admin"){
         if(credentials["admin"][which(credentials$username_id==isolate(input$userName)),]){
           sidebarMenu(
-            menuItem("Configuration", tabName = "config", icon = icon("th")),
+            #menuItem("Configuration", tabName = "config", icon = icon("th")),
             menuItem("Results", tabName = "results", icon = icon("th")),
-            menuItem("HTML", tabName = "init_markdown", icon = icon("th")),
-            menuItem("Engine links", tabName = "en_link", icon = icon("th")),
+            # menuItem("HTML", tabName = "init_markdown", icon = icon("th")),
+            # menuItem("Engine links", tabName = "en_link", icon = icon("th")),
             sidebarMenu(
               selectInput("type_engine","Choose which engine you want to show:", choices = c("Engine 1" = 1, "Engine 2" = 2),selected = selected_in())
               )
@@ -460,7 +459,7 @@ function(input, output, session) {
         write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
                     row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
       }
-      else if (input$tabs == "Task Consfiguration"){
+      else if (input$tabs == "Task Configuration"){
         RV$tasks <- RV$tasks %>% add_row(TASK = paste("Task"," ",dim(RV$tasks)[1]+1), DESCRIPTION= input$DESCRIPTION,
                                          TIME_MIN = input$TIME_MIN, TIME_SEC = input$TIME_SEC,
                                          COUNTDOWN_MESSAGE = input$COUNTDOWN_MESSAGE)
@@ -476,6 +475,7 @@ function(input, output, session) {
         
         write.table(x = RV$survey, file = file.path(userDir, 'questions.csv'), append = FALSE,
                     row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+        
         
       }
       
@@ -591,6 +591,7 @@ function(input, output, session) {
                                  box(
                                    width = NULL,
                                    status = "primary",
+                                   h4(icon("info-circle"),"You can drag the rows to change the order"),
                                    DT::dataTableOutput("tasktable"),
                                    textInput("DESCRIPTION", 'Task description'),
                                    numericInput('TIME_MIN','Minutes',10,
@@ -606,6 +607,7 @@ function(input, output, session) {
                                  box(
                                    width = NULL,
                                    status = "primary",
+                                   h4(icon("info-circle"),"You can drag the rows to change the order"),
                                    DT::dataTableOutput("questiontable"),
                                    textInput("question", "Question"),
                                    textInput("option", 'Option'),
@@ -645,6 +647,24 @@ function(input, output, session) {
   )
   
   markdowntab <- tabItem(
+    # tags$head(tags$script(
+    #   HTML(
+    #     "function addMarkup(){
+    #       var sent='';
+    #       sent= document.getElementById('render_after_upload').innerHTML;
+    #       var selection='';
+    #       if(window.getSelection){
+    #         selection = window.getSelection().toString();
+    #       }
+    #       else if(document.selection && document.selection.type != 'Control'){
+    #         selection = document.selection.createRange().text;
+    #       }
+    #       marked = '<mark>'.concat(selection).concat('</mark>');
+    #       result = sent.replace(selection, marked);
+    #       console.log(result);
+    #       document.getElementById('render_after_upload').innerHTML = result;
+    #     }"))
+    # ),
     tabName="init_markdown",
     tabsetPanel(type = "tabs", id = "tabss", 
       tabPanel("HTML",
@@ -656,6 +676,7 @@ function(input, output, session) {
                            multiple = FALSE,
                            accept = c(".html")),
                  downloadButton("downloadMardown", "Download current html"),
+                 #actionButton("change_html","Change current html in current admin user",onclick="addMarkup()")
                )
       ))
   )
@@ -672,7 +693,7 @@ function(input, output, session) {
                            textInput("html_frame_1", "Please change only the iframe src:", value = isolate(includeHTML(file.path("www/iframe1_link.html")))),
                            actionButton("save_frame_1","Save Iframe 1"),
                            h3("Src engine 2"),
-                           textInput("html_frame", "Please change only the iframe src:", value = isolate(includeHTML(file.path("www/iframe2_link.html")))),
+                           textInput("html_frame", label = h4("Please change only the iframe src:", tipify(icon("info-circle"), title = "The current src implements a reverse proxy, with an online CDN service, designed to bypass some Cross-Origin Resource Sharing restrictions. In our case, we overcome the X-Frame-Options: SAMEORIGIN HTTP response header of pubmed, which refuses to display the URL in a frame. If you change this src and you get the same problem with a new URL, you can also overcome it with the “Ignore X-Frame headers” Chrome or Mozilla extensions.")), value = isolate(includeHTML(file.path("www/iframe2_link.html")))),
                            actionButton("save_frame","Save Iframe 2")
                          )
                          
@@ -717,61 +738,62 @@ function(input, output, session) {
         #if (input$userName == "admin"){
         if(credentials["admin"][which(credentials$username_id==isolate(input$userName)),]){
           tabItems(
-            tabItem(tabName ="splash", class = "active",
+            tabItem(
+              tabName ="splash", 
+              class = "active",
                     fluidRow(
                       if (questions() == FALSE){
                         box(width = 12,
                             #includeMarkdown(file.path("markdown.rmd")),
-                            includeHTML("init_html.html"),
+                            #includeHTML("init_html.html"),
+                            htmlOutput("first_html"),
                             actionButton("questions", "Go to questionnaire", class = "btn-primary"),)}
-                      else{
+                      else {
+                        # refresh_survey(TRUE)
+                        # if(refresh_survey()){
+                        #   refresh_survey(FALSE)
+                        
                         fluidRow(
                           column(12, align = "center",
                           #div(h2(isolate(textconfig()["survey_title",]))),
                           box(
                               width = 12,
-                              div(id="btitle",h2(isolate(textconfig()["survey_title",]))),
+                              div(id="btitle",h1(textconfig()["survey_title",])),
                               div(id="bSurvey",source("shiny_survey.R",local = TRUE)$value),
                               div(style = "height:20px;"),
                               div(actionButton("back", "Back", class = "btn-primary"), style="float:right"),
                               uiOutput("showbuttons")
-                          ),
-                          #uiOutput("showbuttons")
+                          )
                           )
                         )
-                        }
+                        }#}
                     )),
             configtab,
             resultstab,
             markdowntab,
-            isolate(enginetab))
+            isolate(enginetab)
+            )
         }
         else {
           tabItems(
-            tabItem(tabName ="splash", class = "active",
+            tabItem(
+              tabName ="splash",
+                    class = "active",
                     fluidRow(
                       if (questions() == FALSE){
                         box(width = 12,
                             #includeMarkdown(file.path("markdown.rmd")),
-                            includeHTML("init_html.html"),
+                            htmlOutput("first_html"),
+                            #includeHTML("init_html.html"),
                             actionButton("questions", "Go to questionnaire", class = "btn-primary"),)}
                       else{
-                        # fluidRow(
-                        #   box(width = 12,
-                        #       surveyOutput(df=read_csv("CSV_inputs/questions.csv", col_types = cols(x = col_character()), col_names = T)),
-                        #       # survey_title= "User Survey"
-                        #       survey_title = input$survey_title
-                        #   ),
-                        #   box(width = 12,
-                        #       div(actionButton("start", "Start", class = "btn-primary"), style="float:left"),
-                        #       div(actionButton("back", "Back", class = "btn-primary"), style="float:right")
-                        #   ))
+                        
                         fluidRow(
                           column(12, align = "center",
                                  #div(isolate(h2(textconfig()["survey_title",]))),
                                  box(
                                    width = 12,
-                                   div(id="btitle",h2(isolate(textconfig()["survey_title",]))),
+                                   div(id="btitle",h1(textconfig()["survey_title",])),
                                    div(id="bSurvey",source("shiny_survey.R",local = TRUE)$value),
                                    div(style = "height:20px;"),
                                    div(actionButton("back", "Back", class = "btn-primary"), style="float:right"),
@@ -795,7 +817,7 @@ function(input, output, session) {
                       column(12, align = "center",
                       #h2(isolate(textconfig()["task_page_title",])),
                       box(width = 12, 
-                          div(id="btitle",h2(isolate(textconfig()["task_page_title",]))),
+                          div(id="btitle",h1(isolate(textconfig()["task_page_title",]))),
                           div(id="bSurvey",
                           textOutput("task"),
                           tags$head(tags$style("#task{color: black;
@@ -813,17 +835,18 @@ function(input, output, session) {
                           tags$head(tags$style("#timeleft{color: red;
                                    font-size: 20px;``
                                    }"
-                          )),
+                          ))),
                           div(style="height:7px;"),
                           htmlOutput(num_engine_admin),
                           div(style="height:5px;"),
                           textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "100px"),
                           actionButton("submit_answer", "Submit", class = "btn-primary"),
-                      ))))),
-            configtab,
-            resultstab,
-            markdowntab,
-            isolate(enginetab)
+                      #)
+                      )))),
+            #configtab,
+            resultstab
+            #markdowntab,
+            #isolate(enginetab)
           )
           
         }
@@ -836,7 +859,7 @@ function(input, output, session) {
                       column(12, align = "center",
                       #h2(isolate(textconfig()["task_page_title",])),
                       box(width = 12, 
-                          div(id="btitle",h2(isolate(textconfig()["task_page_title",]))),
+                          div(id="btitle",h1(isolate(textconfig()["task_page_title",]))),
                           div(id="bSurvey",
                           textOutput("task"),
                           tags$head(tags$style("#task{color: black;
@@ -912,7 +935,9 @@ function(input, output, session) {
   
   output$descrip <- renderText({
     if (input$submit_answer+1 > length(task_number)){
-      if(!credentials["admin"][which(credentials$username_id==isolate(input$userName)),]){file.remove('df.RData')}
+      if((credentials["admin"][which(credentials$username_id==isolate(input$userName)),])==FALSE){
+        file.remove('df.RData')
+        }
       isolate(textconfig()["finished_tasks_descrip",])
     }
     else{
@@ -925,6 +950,7 @@ function(input, output, session) {
     PAGE$splash <- TRUE 
     updateTextInput(session, "html_frame", value = includeHTML("www/iframe2_link.html"))
     updateTextInput(session, "html_frame_1", value = includeHTML("www/iframe1_link.html"))
+    
   })
   
 
@@ -992,6 +1018,10 @@ function(input, output, session) {
     return(includeHTML("init_html.html"))
   }
   
+  output$first_html <- renderUI({getHTML()
+    
+  })
+  
   
   observeEvent(input$file1,{
     
@@ -1003,6 +1033,9 @@ function(input, output, session) {
                 col.names = FALSE,
                 row.names = FALSE)
     output$render_after_upload<-renderUI({getHTML()})
+    output$first_html <- renderUI({getHTML()
+      
+    })
   })
   
   output$downloadMardown <- downloadHandler(
@@ -1024,5 +1057,25 @@ function(input, output, session) {
     updateTextInput(session, "html_frame", value = includeHTML("www/iframe2_link.html"))
     updateTextInput(session, "html_frame_1", value = includeHTML("www/iframe1_link.html"))
   })
+  
+  
+  # refresh_survey <- reactiveVal(FALSE)
+  # observe({
+  #   if (!is.null(input$des)){
+  #     # if(input$des == "splash"){
+  #     #   refresh_survey(TRUE)
+  #     #   print(refresh_survey)
+  #     # }
+  #     if(input$tabs == "Questionnaire" && (input$new_row | input$delete_row | !is.null(input[["rowreorder_quest"]])
+  #                                          #input[["rowreorder_quest"]]
+  #                                          )){
+  #       refresh_survey(TRUE)
+  #       print("change")
+  #       
+  #     }
+  #   }
+  #   })
+  
+  
   
 }

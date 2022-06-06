@@ -17,6 +17,7 @@ library(shinysurveys)
 library(data.table)
 library(bcrypt)
 library(xml2)
+library(shinyBS)
 
 # Definition of the different parts of the dashboard
 appCSS <- ".mandatory_star { color: red; }

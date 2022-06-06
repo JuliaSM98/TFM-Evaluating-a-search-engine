@@ -2,8 +2,10 @@
  
  h1 {
   font-weight: bold;
+  font-size: 32px;
+  /*color: #575555;*/
   /*color: #fff;*/
-  /*font-size: 32px;*/
+  /*font-size: 24px;*/
 }
 
 h2 {
@@ -18,9 +20,9 @@ h4 {
 }
 
 #btitle {
-  border-style: dotted;
+  /*border-style: dotted;
   border-width: medium;
-  border-color: #585858;
+  border-color: #585858;*/
   }
 
 #bSurvey {

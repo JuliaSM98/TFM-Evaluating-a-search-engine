@@ -1,8 +1,6 @@
 "USER_NAME","Password","Engine","Admin"
 "user1","mypass1",1,FALSE
 "user2","mypass2",2,FALSE
-"pepa","pepa",2,FALSE
 "admin","adminpass",1,TRUE
 "user3","pass3",1,FALSE
 "admin3","mypass3",2,TRUE
-"new","new",2,FALSE
