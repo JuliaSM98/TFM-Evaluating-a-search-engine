@@ -1,20 +1,19 @@
-library(shiny)
-library(shinyjs)
-library(shinydashboard)
-library(DT)
-library(lubridate)
-library(stringr)
-library(base)
-library(glue)
-library(RSQLite)
-library(DBI)
-library(tidyverse)
-library(markdown)
-library(xlsx)
-library(shinysurveys)
-library(data.table)
-library(bcrypt)
-library(xml2)
+# library(shiny)
+# library(shinyjs)
+# library(shinydashboard)
+# library(DT)
+# library(lubridate)
+# library(stringr)
+# library(base)
+# library(glue)
+# library(RSQLite)
+# library(DBI)
+# library(tidyverse)
+# library(xlsx)
+# library(shinysurveys)
+# library(data.table)
+# library(bcrypt)
+# library(xml2)
 
 callback_tasks <- c(
   "table.on('row-reorder', function(e, details, edit){",
@@ -59,13 +58,14 @@ function(input, output, session) {
   
   # read configuration files
   
-  text_config <- read.csv('CSV_inputs/text.csv', row.names = 1)
+  text_config <- read.csv('CSV_inputs/text.csv', row.names = 1,stringsAsFactors=FALSE)
+  text_config_survey <- read.csv('CSV_inputs/text_survey.csv', row.names = 1,stringsAsFactors=FALSE)
   questions_drive <- read_csv("CSV_inputs/questions.csv", col_types = cols(x = col_character()), col_names = T)
   app_responses <- as.data.frame(fread("response/app_results.tsv", fill=TRUE))
   task_description <- read.csv('CSV_inputs/tasksdescrip.csv')
   users <- read.csv('CSV_inputs/users.csv')
   
-
+  task_descriptionn <- reactiveFileReader(1000, session, "CSV_inputs/tasksdescrip.csv", read.csv)
   
   ##################### Information to extract from csv's ########################
   user_name <- c()
@@ -84,22 +84,8 @@ function(input, output, session) {
     admin_permit<- append(admin_permit, toString((users$Admin)[val]))
   }
   
-  task_number <- c()
-  y = c(1:length(task_description$TASK))
-  for (val in y) {
-    task_number<- append(task_number, toString((task_description$TASK)[val]))
-  }
-  task_des <- c()
-  for (val in y) {
-    task_des<- append(task_des, toString((task_description$DESCRIPTION)[val]))
-  }
-  
-  min <- c()
-  sec <- c()
-  for (val in y) {
-    min <- append(min, as.integer((task_description$TIME_MIN)[val]))
-    sec <- append(sec, as.integer((task_description$TIME_SEC)[val]))
-  }
+  min <- c(task_description$TIME_MIN)
+  sec <- c(task_description$TIME_SEC)
   
   
   credentials = data.frame(
@@ -192,7 +178,11 @@ function(input, output, session) {
             menuItem("Configuration", tabName = "config", icon = icon("th")),
             menuItem("Results", tabName = "results", icon = icon("th")),
             menuItem("HTML", tabName = "init_markdown", icon = icon("th")),
-            menuItem("Engine links", tabName = "en_link", icon = icon("th"))
+            menuItem("Engine links", tabName = "en_link", icon = icon("th")),
+            if (questions()){
+              sidebarMenu(
+            actionButton("rerender_survey", "Update survey"))
+              }
               
           )
         }
@@ -232,20 +222,23 @@ function(input, output, session) {
   })
   
   ####### Define the time for each task and also the countdown message ########
-  if(isolate(USER$login) == TRUE & isolate(PAGE$splash)==TRUE){
-    k <- isolate(input$submit_answer)
-  }
-  else {
-    k<-0
-  }
-  i <- match(task_number[k +1],task_description$TASK)
-  minutes <- reactiveVal(min[i])
-  seconds <- reactiveVal(sec[i])
+
+  minutes <- reactiveVal(min[1])
+  seconds <- reactiveVal(sec[1])
+  
   active <- reactiveVal(FALSE)
   observe({
+    
+    if(dim(task_descriptionn())[1] ==0){
+      minutes(0)
+      seconds(0)
+      shinyjs::toggleState(id = "txt", condition = FALSE)
+      shinyjs::toggleState(id = "submit_answer", condition = FALSE)
+    }
+    else{
     invalidateLater(1000, session)
     isolate({
-      if (USER$login == TRUE & (minutes()>=0 & seconds()>=0) & PAGE$splash == TRUE){
+      if (USER$login == TRUE & (minutes()>=0 & seconds()>=0 ) & PAGE$splash == TRUE){
         active(TRUE)
         if(active() & !(minutes()==0 & seconds()==0))
         {
@@ -256,29 +249,23 @@ function(input, output, session) {
           seconds(seconds()-1)
           if(minutes() ==0 & seconds() ==0){
             active(FALSE)
-            j <- match(task_number[input$submit_answer +1],task_description$TASK)
+            
+            task_count <- c()
+            z = c(1:length(task_descriptionn()$TASK))
+            for(val in z){
+              task_count <- append(task_count, toString((task_descriptionn()$COUNTDOWN_MESSAGE)[val]))
+            }
+            
             showModal(modalDialog(
-              title = "Important message",
-              task_description$COUNTDOWN_MESSAGE[j]
+              title = "Press submit to continue:",
+              task_count[input$submit_answer +1]
             ))
             shinyjs::toggleState(id = "txt", condition = FALSE)
           }
         }
       }
-    })
+    })}
   })
-  
-  
-  Timecomplete <- function(j){
-    m<-minutes()-min[j]
-    s<-seconds()-sec[j]
-    if (s<0){
-      s<-60+s
-      if (m>0) m<-m-1
-      else m<-0
-    }
-    return(paste(m,s,sep=":"))
-  }
   
   # When input$submit_answer, we change the min/sec from next task and save data
   
@@ -287,8 +274,17 @@ function(input, output, session) {
   fieldsAll <- c("userName","txt")
   
   observeEvent(input$submit_answer, {
+    task_description <- read.csv('CSV_inputs/tasksdescrip.csv')
+    task_number <- c()
+    y = c(1:length(task_description$TASK))
+    for (val in y) {
+      task_number<- append(task_number, toString((task_description$TASK)[val]))
+    }
+
+    min <- c(task_description$TIME_MIN)
+    sec <- c(task_description$TIME_SEC)
     i <- match(task_number[input$submit_answer +1],task_description$TASK)
-    j <- match(task_number[input$submit_answer],task_description$TASK)
+    j <- input$submit_answer
     
     m<-min[j]-minutes()
     s<-sec[j]-seconds()
@@ -352,7 +348,6 @@ function(input, output, session) {
       seconds(0)
       shinyjs::toggleState(id = "submit_answer", condition = FALSE)
     }
-    
     if (input$submit_answer > length(task_number)){
     }
     else{
@@ -383,7 +378,6 @@ function(input, output, session) {
   # go back and forth questionnaire
   questions = reactiveVal(FALSE)
   observeEvent(input$questions, {
-    #print(questions())
     questions(TRUE)
     updateTextInput(session, "html_frame", value = includeHTML("www/iframe2_link.html"))
     updateTextInput(session, "html_frame_1", value = includeHTML("www/iframe1_link.html"))
@@ -403,24 +397,24 @@ function(input, output, session) {
   # Load Data
   
   
-  RV <- reactiveValues(data = users, tasks = task_description, survey = questions_drive, answers = app_responses, text = text_config )
+  RV <- reactiveValues(data = users, tasks = task_description, survey = questions_drive, answers = app_responses, text = text_config, text_survey = text_config_survey )
   user_data <- reactive({RV$data})
   t_descrip <- reactive({RV$tasks})
   questionss <-reactive({RV$survey})
   responses <- reactive({RV$answers})
   textconfig <- reactive({RV$text})
+  textconfig_survey <- reactive({RV$text_survey})
   
   
   observeEvent(input$change_survey_title, {
-    #text_config['survey_title',] <- input$survey_page_title
-    RV$text['survey_title',] <- input$survey_page_title
-    write.table(x = RV$text, file = file.path("CSV_inputs/", "text.csv"), append = FALSE,
+    RV$text_survey['survey_title',] <- input$survey_page_title
+    write.table(x = RV$text_survey, file = file.path("CSV_inputs/", "text_survey.csv"), append = FALSE,
                 row.names = TRUE, col.names = TRUE, sep = ",", qmethod = "double")
+    
    
     
   })
   observeEvent(input$change_task_title, {
-    #text_config['survey_title',] <- input$survey_page_title
     RV$text['task_page_title',] <- input$task_page_title
     write.table(x = RV$text, file = file.path("CSV_inputs/", "text.csv"), append = FALSE,
                 row.names = TRUE, col.names = TRUE, sep = ",", qmethod = "double")
@@ -430,11 +424,11 @@ function(input, output, session) {
   
 
   observeEvent(input$change_finished_tasks_title, {
-    #text_config['survey_title',] <- input$survey_page_title
     RV$text['finished_tasks_title',] <- input$finished_tasks_title
     write.table(x = RV$text, file = file.path("CSV_inputs/", "text.csv"), append = FALSE,
                 row.names = TRUE, col.names = TRUE, sep = ",", qmethod = "double")
   })
+  
   
   observeEvent(input$change_finished_tasks_descrip, {
     RV$text['finished_tasks_descrip',] <- input$finished_tasks_descrip
@@ -460,9 +454,15 @@ function(input, output, session) {
                     row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
       }
       else if (input$tabs == "Task Configuration"){
+        if(dim(task_descriptionn())[1]>0){
         RV$tasks <- RV$tasks %>% add_row(TASK = paste("Task"," ",dim(RV$tasks)[1]+1), DESCRIPTION= input$DESCRIPTION,
                                          TIME_MIN = input$TIME_MIN, TIME_SEC = input$TIME_SEC,
-                                         COUNTDOWN_MESSAGE = input$COUNTDOWN_MESSAGE)
+                                         COUNTDOWN_MESSAGE = input$COUNTDOWN_MESSAGE)}
+        else {
+          RV$tasks <- data.frame(TASK = paste("Task"," ",dim(RV$tasks)[1]+1), DESCRIPTION= input$DESCRIPTION,
+                                    TIME_MIN = input$TIME_MIN, TIME_SEC = input$TIME_SEC,
+                                    COUNTDOWN_MESSAGE = input$COUNTDOWN_MESSAGE)
+        }
         write.table(x = RV$tasks, file = file.path(userDir, 'tasksdescrip.csv'), append = FALSE,
                     row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
       }
@@ -496,10 +496,12 @@ function(input, output, session) {
                       row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
         }}
       if(!is.null(input$tasktable_rows_selected)){
-        if (input$tabs == "Task Consfiguration"){
+        if (input$tabs == "Task Configuration"){
           RV$tasks <- RV$tasks[-as.numeric(input$tasktable_rows_selected),]
           row.names(RV$tasks) <- NULL
-          RV$tasks$TASK <- paste("Task",c(1:dim(RV$tasks)[1]))
+          if ( dim(task_descriptionn())[1]> input$tasktable_rows_selected){
+          RV$tasks$TASK <- paste("Task",c(1:dim(RV$tasks)[1]))}
+          
           write.table(x = RV$tasks, file = file.path(userDir, "tasksdescrip.csv"), append = FALSE,
                       row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
         }}
@@ -539,6 +541,7 @@ function(input, output, session) {
                                                                   options = list(rowReorder = TRUE,order = list(list(0, 'asc')))
                                                                   )})
   isolate(output$texttable <- renderDataTable(textconfig(), options = list(scrollX = TRUE)))
+  isolate(output$texttable_survey <- renderDataTable(textconfig_survey(), options = list(scrollX = TRUE)))
   
   observeEvent(input[["rowreorder"]], {
     old <- unlist(input[["rowreorder"]]$old)
@@ -587,7 +590,7 @@ function(input, output, session) {
                                    
                                  )
                         ),
-                        tabPanel("Task Consfiguration", 
+                        tabPanel("Task Configuration", 
                                  box(
                                    width = NULL,
                                    status = "primary",
@@ -616,16 +619,25 @@ function(input, output, session) {
                                  )
                         ))),
             tabPanel("Text Configurations",
-                   
+                     tabsetPanel(type = "tabs", id = "tabs2",
+                                 tabPanel("Tasks Text",
                                  box(
                                    width = NULL,
                                    status = "primary",
                                    DT::dataTableOutput("texttable"),
-                                   splitLayout(cellWidths = c("60%", "40%"),div(textInput("survey_page_title", "Survey Page Title")), div(style = "margin-top: 25px;",actionButton("change_survey_title","Change survey title"))),
+                                   #splitLayout(cellWidths = c("60%", "40%"),div(textInput("survey_page_title", "Survey Page Title")), div(style = "margin-top: 25px;",actionButton("change_survey_title","Change survey title"))),
                                    splitLayout(cellWidths = c("60%", "40%"),div(textInput("task_page_title", "Task Page Title")), div(style = "margin-top: 25px;",actionButton("change_task_title","Change task title"))),
                                    splitLayout(cellWidths = c("60%", "40%"),div(textInput("finished_tasks_title", "Finish tasks title")), div(style = "margin-top: 25px;", actionButton("change_finished_tasks_title","Change finish task title"))),
                                    splitLayout(cellWidths = c("60%", "40%"),div(textInput("finished_tasks_descrip", "Finish tasks description")), div(style = "margin-top: 25px;", actionButton("change_finished_tasks_descrip","Change finish task description"))),
-                                 )
+                                 )),
+                                  tabPanel("Survey Text",
+                                    box(width = NULL,
+                                         status = "primary",
+                                         DT::dataTableOutput("texttable_survey"),
+                                         splitLayout(cellWidths = c("60%", "40%"),div(textInput("survey_page_title", "Survey Page Title")), div(style = "margin-top: 25px;",actionButton("change_survey_title","Change survey title"))),
+                                        )
+                                            
+                                    ))
                      
             )
             )
@@ -689,11 +701,11 @@ function(input, output, session) {
                          box(
                            width = NULL,
                            status = "primary",
-                           h3("Src engine 1"),
+                           h3("Src Engine 1"),
                            textInput("html_frame_1", "Please change only the iframe src:", value = isolate(includeHTML(file.path("www/iframe1_link.html")))),
                            actionButton("save_frame_1","Save Iframe 1"),
-                           h3("Src engine 2"),
-                           textInput("html_frame", label = h4("Please change only the iframe src:", tipify(icon("info-circle"), title = "The current src implements a reverse proxy, with an online CDN service, designed to bypass some Cross-Origin Resource Sharing restrictions. In our case, we overcome the X-Frame-Options: SAMEORIGIN HTTP response header of pubmed, which refuses to display the URL in a frame. If you change this src and you get the same problem with a new URL, you can also overcome it with the “Ignore X-Frame headers” Chrome or Mozilla extensions.")), value = isolate(includeHTML(file.path("www/iframe2_link.html")))),
+                           h3("Src Engine 2"),
+                           textInput("html_frame", label = h4("Please change only the iframe src:", tipify(icon("info-circle"), title = "The current src implements a reverse proxy, with an online CDN service, designed to bypass some Cross-Origin Resource Sharing restrictions. In our case, we overcome the X-Frame-Options: SAMEORIGIN HTTP response header of pubmed, which refuses to display the URL in a frame. If you change this src and you get the same problem with a new URL, you can also overcome it with the “Ignore X-Frame headers” Chrome or Mozilla extensions.", placement ="right")), value = isolate(includeHTML(file.path("www/iframe2_link.html")))),
                            actionButton("save_frame","Save Iframe 2")
                          )
                          
@@ -748,17 +760,18 @@ function(input, output, session) {
                             #includeHTML("init_html.html"),
                             htmlOutput("first_html"),
                             actionButton("questions", "Go to questionnaire", class = "btn-primary"),)}
-                      else {
+                      else if(questions()) {
                         # refresh_survey(TRUE)
                         # if(refresh_survey()){
                         #   refresh_survey(FALSE)
-                        
+                        isolate(title_for_survey <- textconfig_survey()["survey_title",])
+                        if (!is.null(input$rerender_survey)){
                         fluidRow(
                           column(12, align = "center",
                           #div(h2(isolate(textconfig()["survey_title",]))),
                           box(
                               width = 12,
-                              div(id="btitle",h1(textconfig()["survey_title",])),
+                              div(id="btitle",h1(isolate(title_for_survey))),
                               div(id="bSurvey",source("shiny_survey.R",local = TRUE)$value),
                               div(style = "height:20px;"),
                               div(actionButton("back", "Back", class = "btn-primary"), style="float:right"),
@@ -766,7 +779,26 @@ function(input, output, session) {
                           )
                           )
                         )
-                        }#}
+                        }
+                        else{
+                          fluidRow(
+                            column(12, align = "center",
+                                   #div(h2(isolate(textconfig()["survey_title",]))),
+                                   box(
+                                     width = 12,
+                                     div(id="btitle",h1(title_for_survey)),
+                                     div(id="bSurvey",source("shiny_survey.R",local = TRUE)$value),
+                                     div(style = "height:20px;"),
+                                     div(actionButton("back", "Back", class = "btn-primary"), style="float:right"),
+                                     uiOutput("showbuttons")
+                                   )
+                            )
+                          )
+                          
+                        }
+                        
+                        
+                        }
                     )),
             configtab,
             resultstab,
@@ -787,13 +819,13 @@ function(input, output, session) {
                             #includeHTML("init_html.html"),
                             actionButton("questions", "Go to questionnaire", class = "btn-primary"),)}
                       else{
-                        
+                        title_for_survey <- textconfig_survey()["survey_title",]
                         fluidRow(
                           column(12, align = "center",
                                  #div(isolate(h2(textconfig()["survey_title",]))),
                                  box(
                                    width = 12,
-                                   div(id="btitle",h1(textconfig()["survey_title",])),
+                                   div(id="btitle",h1(title_for_survey)),
                                    div(id="bSurvey",source("shiny_survey.R",local = TRUE)$value),
                                    div(style = "height:20px;"),
                                    div(actionButton("back", "Back", class = "btn-primary"), style="float:right"),
@@ -909,39 +941,47 @@ function(input, output, session) {
     }
   )
   
-  # output$showbuttons <- renderUI({
-  #     
-  #     #sub <- readRDS("submitted.rds")
-  #     sub <- reactiveFileReader(1000, session, "submitted.rds", readRDS)
-  #       if(sub()) {
-  #           box(width = 12,
-  #               div(actionButton("start", "Start", class = "btn-primary"), style="float:left"),
-  #               div(actionButton("back", "Back", class = "btn-primary"), style="float:right")
-  #           )
-  #       }
-  # 
-  #     })
   
   
   
   output$task <- renderText({
-    if (input$submit_answer+1 > length(task_number)){
-      isolate(textconfig()["finished_tasks_title",])
+    task_numberr <- c()
+    z = c(1:length(task_descriptionn()$TASK))
+    for(val in z){
+      task_numberr <- append(task_numberr, toString((task_descriptionn()$TASK)[val]))
+    }
+    
+    #task_numberr <- c(task_descriptionn()$TASK)
+    if (input$submit_answer+1 > length(task_numberr) | dim(task_descriptionn())[1]==0 ){
+      (textconfig()["finished_tasks_title",])
     }
     else{
-      paste(task_number[input$submit_answer +1],"of",length(task_number))
+      paste(task_numberr[input$submit_answer +1],"of",length(task_numberr))
     }
   })
   
   output$descrip <- renderText({
-    if (input$submit_answer+1 > length(task_number)){
+    task_numberr <- c()
+    z = c(1:length(task_descriptionn()$TASK))
+    for(val in z){
+      task_numberr <- append(task_numberr, toString((task_descriptionn()$TASK)[val]))
+    }
+    #task_numberr <- c(task_descriptionn()$TASK)
+    if (input$submit_answer+1 > length(task_numberr) | dim(task_descriptionn())[1]==0){
       if((credentials["admin"][which(credentials$username_id==isolate(input$userName)),])==FALSE){
         file.remove('df.RData')
         }
-      isolate(textconfig()["finished_tasks_descrip",])
+        textconfig()["finished_tasks_descrip",]
     }
     else{
-      task_des[input$submit_answer +1]
+      task_dess <- c()
+      z = c(1:length(task_descriptionn()$TASK))
+      for(val in z){
+        task_dess <- append(task_dess, toString((task_descriptionn()$DESCRIPTION)[val]))
+      }
+      
+      #task_dess <-c(task_descriptionn()$DESCRIPTION)
+      task_dess[input$submit_answer +1]
     }
     
   })
@@ -987,6 +1027,10 @@ function(input, output, session) {
   })
   
   output$timeleft <- renderText({
+    if(dim(task_descriptionn())[1] ==0){
+      minutes(0)
+      seconds(0)}
+    
     paste("Time left:", minutes(), "M", seconds(), "S")
   })
   
@@ -1054,28 +1098,13 @@ function(input, output, session) {
   )
   
   observeEvent(input$type_engine,{
+    task_description <- read.csv('CSV_inputs/tasksdescrip.csv')
+    min <- c(task_description$TIME_MIN)
+    sec <- c(task_description$TIME_SEC)
+    minutes(min[1])
+    seconds(sec[1])
     updateTextInput(session, "html_frame", value = includeHTML("www/iframe2_link.html"))
     updateTextInput(session, "html_frame_1", value = includeHTML("www/iframe1_link.html"))
   })
-  
-  
-  # refresh_survey <- reactiveVal(FALSE)
-  # observe({
-  #   if (!is.null(input$des)){
-  #     # if(input$des == "splash"){
-  #     #   refresh_survey(TRUE)
-  #     #   print(refresh_survey)
-  #     # }
-  #     if(input$tabs == "Questionnaire" && (input$new_row | input$delete_row | !is.null(input[["rowreorder_quest"]])
-  #                                          #input[["rowreorder_quest"]]
-  #                                          )){
-  #       refresh_survey(TRUE)
-  #       print("change")
-  #       
-  #     }
-  #   }
-  #   })
-  
-  
   
 }
