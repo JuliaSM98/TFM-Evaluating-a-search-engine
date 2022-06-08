@@ -1,5 +1,5 @@
 # library(shiny)
-# library(shinyjs)
+library(shinyjs)
 # library(shinydashboard)
 # library(DT)
 # library(lubridate)
@@ -228,15 +228,14 @@ function(input, output, session) {
   
   active <- reactiveVal(FALSE)
   observe({
-    
+    invalidateLater(1000, session)
     if(dim(task_descriptionn())[1] ==0){
       minutes(0)
       seconds(0)
-      shinyjs::toggleState(id = "txt", condition = FALSE)
+      toggleState(id = "txt", condition = FALSE)
       shinyjs::toggleState(id = "submit_answer", condition = FALSE)
     }
     else{
-    invalidateLater(1000, session)
     isolate({
       if (USER$login == TRUE & (minutes()>=0 & seconds()>=0 ) & PAGE$splash == TRUE){
         active(TRUE)
@@ -340,13 +339,13 @@ function(input, output, session) {
       shinyjs::toggleState(id = "txt", condition = TRUE)
       minutes(min[i])
       seconds(sec[i])
-      
     }
-    else{
+    else { 
       shinyjs::toggleState(id = "txt", condition = FALSE)
       minutes(0)
       seconds(0)
       shinyjs::toggleState(id = "submit_answer", condition = FALSE)
+      #prin(shinyjs::toggleState(id = "submit_answer", condition = FALSE))
     }
     if (input$submit_answer > length(task_number)){
     }
@@ -490,12 +489,12 @@ function(input, output, session) {
     if(credentials["admin"][which(credentials$username_id==isolate(input$userName)),]){
       if (!is.null(input$usertable_rows_selected)) {
         if (input$tabs =="Users"){
-          if(any(RV$data[-as.numeric(input$usertable_rows_selected),][4])==TRUE ){
-            #print("we still have admins")
-          RV$data <- RV$data[-as.numeric(input$usertable_rows_selected),]
-          row.names(RV$data) <- NULL
-          write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
-                      row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")}
+          if(any(RV$data[-as.numeric(input$usertable_rows_selected),][,4])==TRUE ){
+              RV$data <- RV$data[-as.numeric(input$usertable_rows_selected),]
+              row.names(RV$data) <- NULL
+              write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
+                          row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+          }
           else {
             showModal(modalDialog(
               title = "Warning!",
@@ -507,8 +506,9 @@ function(input, output, session) {
         if (input$tabs == "Task Configuration"){
           RV$tasks <- RV$tasks[-as.numeric(input$tasktable_rows_selected),]
           row.names(RV$tasks) <- NULL
-          if ( dim(task_descriptionn())[1]> input$tasktable_rows_selected){
-          RV$tasks$TASK <- paste("Task",c(1:dim(RV$tasks)[1]))}
+          if (dim(task_descriptionn())[1] > length(input$tasktable_rows_selected)){
+          RV$tasks$TASK <- paste("Task",c(1:dim(RV$tasks)[1]))
+          }
           
           write.table(x = RV$tasks, file = file.path(userDir, "tasksdescrip.csv"), append = FALSE,
                       row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
@@ -536,20 +536,20 @@ function(input, output, session) {
   })
   
   
-  output$usertable <- renderDataTable(user_data(), options = list(scrollX = TRUE))
-  output$tasktable <- renderDataTable(server=FALSE,{datatable(RV$tasks,
+  output$usertable <- DT::renderDataTable(user_data(), options = list(scrollX = TRUE))
+  output$tasktable <- DT::renderDataTable(server=FALSE,{datatable(RV$tasks,
                                                         extensions = "RowReorder",  
                                                         callback = JS(callback_tasks),
-                                                        options = list(rowReorder = TRUE,order = list(list(0, 'asc')))
+                                                        options = list(scrollX = TRUE,rowReorder = TRUE,order = list(list(0, 'asc')))
                                                         )})
-  output$responsetable <- renderDataTable(responses(),options = list(scrollX = TRUE))
-  output$questiontable <- renderDataTable(server=FALSE,{datatable(questionss(), 
+  output$responsetable <- DT::renderDataTable(responses(),options = list(scrollX = TRUE))
+  output$questiontable <- DT::renderDataTable(server=FALSE,{datatable(questionss(), 
                                                                   extensions = "RowReorder",  
                                                                   callback = JS(callback_questions),
-                                                                  options = list(rowReorder = TRUE,order = list(list(0, 'asc')))
+                                                                  options = list(scrollX = TRUE,rowReorder = TRUE,order = list(list(0, 'asc')))
                                                                   )})
-  isolate(output$texttable <- renderDataTable(textconfig(), options = list(scrollX = TRUE)))
-  isolate(output$texttable_survey <- renderDataTable(textconfig_survey(), options = list(scrollX = TRUE)))
+  isolate(output$texttable <- DT::renderDataTable(textconfig(), options = list(scrollX = TRUE)))
+  isolate(output$texttable_survey <- DT::renderDataTable(textconfig_survey(), options = list(scrollX = TRUE)))
   
   observeEvent(input[["rowreorder"]], {
     old <- unlist(input[["rowreorder"]]$old)
@@ -588,6 +588,7 @@ function(input, output, session) {
                                  box(
                                    width = NULL,
                                    status = "primary",
+                                   h4(icon("info-circle"),"Do not use the same Username for different users"),
                                    DT::dataTableOutput("usertable"),
                                    textInput("uname", "User Name"),
                                    textInput('passs','Password'),
@@ -618,7 +619,7 @@ function(input, output, session) {
                                  box(
                                    width = NULL,
                                    status = "primary",
-                                   h4(icon("info-circle"),"You can drag the rows to change the order"),
+                                   h4(icon("info-circle"),HTML("You can drag the rows to change the order.<br>Look at the “shinysurveys” r package documentation to know which kind of questions are supported in this survey.")),
                                    DT::dataTableOutput("questiontable"),
                                    textInput("question", "Question"),
                                    textInput("option", 'Option'),
@@ -994,13 +995,6 @@ function(input, output, session) {
     
   })
   
-  observeEvent(input$start,{
-    PAGE$splash <- TRUE 
-    updateTextInput(session, "html_frame", value = includeHTML("www/iframe2_link.html"))
-    updateTextInput(session, "html_frame_1", value = includeHTML("www/iframe1_link.html"))
-    
-  })
-  
 
   
   
@@ -1034,12 +1028,14 @@ function(input, output, session) {
     array_of_sec <- reactive({input$time_stamp_load_seconds})
   })
   
+  
+  
+  
   output$timeleft <- renderText({
     if(dim(task_descriptionn())[1] ==0){
       minutes(0)
       seconds(0)}
-    
-    paste("Time left:", minutes(), "M", seconds(), "S")
+      paste("Time left:", minutes(), "M", seconds(), "S")
   })
   
   
@@ -1114,5 +1110,12 @@ function(input, output, session) {
     updateTextInput(session, "html_frame", value = includeHTML("www/iframe2_link.html"))
     updateTextInput(session, "html_frame_1", value = includeHTML("www/iframe1_link.html"))
   })
+  
+  observeEvent(input$start,{
+    PAGE$splash <- TRUE 
+    # updateTextInput(session, "html_frame", value = includeHTML("www/iframe2_link.html"))
+    # updateTextInput(session, "html_frame_1", value = includeHTML("www/iframe1_link.html"))
+  })
+
   
 }
