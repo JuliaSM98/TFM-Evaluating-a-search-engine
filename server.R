@@ -490,10 +490,18 @@ function(input, output, session) {
     if(credentials["admin"][which(credentials$username_id==isolate(input$userName)),]){
       if (!is.null(input$usertable_rows_selected)) {
         if (input$tabs =="Users"){
+          if(any(RV$data[-as.numeric(input$usertable_rows_selected),][4])==TRUE ){
+            #print("we still have admins")
           RV$data <- RV$data[-as.numeric(input$usertable_rows_selected),]
           row.names(RV$data) <- NULL
           write.table(x = RV$data, file = file.path(userDir, "users.csv"), append = FALSE,
-                      row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")
+                      row.names = FALSE, col.names = TRUE, sep = ",", qmethod = "double")}
+          else {
+            showModal(modalDialog(
+              title = "Warning!",
+               'You cannot delete all users with admin permission'
+            ))
+          }
         }}
       if(!is.null(input$tasktable_rows_selected)){
         if (input$tabs == "Task Configuration"){

@@ -1,4 +1,4 @@
 "USER_NAME","Password","Engine","Admin"
 "user1","mypass1",1,FALSE
+"admin","adminpass",2,TRUE
 "user2","mypass2",2,FALSE
-"admin","adminpass",1,TRUE
