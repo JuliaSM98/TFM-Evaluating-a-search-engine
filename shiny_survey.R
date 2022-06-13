@@ -1,19 +1,7 @@
 library(shiny)
-library(shinyjs)
-library(shinydashboard)
-library(DT)
-library(lubridate)
-library(stringr)
 library(base)
-library(glue)
-library(RSQLite)
-library(DBI)
 library(tidyverse)
-library(markdown)
-library(xlsx)
 library(shinysurveys)
-library(data.table)
-library(bcrypt)
 
 data <- read_csv("CSV_inputs/questions.csv", col_types = cols(x = col_character()), col_names = T)
 
@@ -46,7 +34,3 @@ if(dim(data)[1]>0){
     }
     shinyApp(ui, server)
 }
-
-  
-
-

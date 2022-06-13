@@ -55,8 +55,8 @@ const http_response_headers_set = {
     // NOTE: be sure to replace "https://www.example.com" with the domain of the HTML page containing the IFRAME.
     // ref.: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
     // ref.: https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
-    'X-Frame-Options': 'ALLOW FROM https://1paumx-j0lia-s0nchez0mart0nez.shinyapps.io/tfm-evaluating-a-search-engine', // IE
-    'Content-Security-Policy': "frame-ancestors 'self' https://1paumx-j0lia-s0nchez0mart0nez.shinyapps.io/tfm-evaluating-a-search-engine", // Chrome, Firefox, etc.
+    'X-Frame-Options': 'ALLOW FROM https://rstudio-connect.nlp.linkeddata.es/content/7dda9ea4-48f8-49fe-9fc6-60946167281b', // IE
+    'Content-Security-Policy': "frame-ancestors 'self' https://rstudio-connect.nlp.linkeddata.es/content/7dda9ea4-48f8-49fe-9fc6-60946167281b", // Chrome, Firefox, etc.
 
     // use this header to bypass the same-origin policy for XMLHttpRequest, Fetch API and so on
     // ref.: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin

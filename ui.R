@@ -1,34 +1,26 @@
-# revise if i need all the libraries
 options(shiny.error = browser)
 library(shiny)
 library(shinyjs)
 library(shinydashboard)
 library(DT)
-#library(lubridate)
-library(stringr)
+library(lubridate)
 library(base)
-library(glue)
-library(RSQLite)
-library(DBI)
 library(tidyverse)
 library(xlsx)
 library(shinysurveys)
 library(data.table)
-library(bcrypt)
+library(bcrypt) 
 library(xml2)
 library(shinyBS)
 
-# Definition of the different parts of the dashboard
+# Mandatory star css
 appCSS <- ".mandatory_star { color: red; }
            } "
 
+## PARTS OF THE UI
 header <- dashboardHeader( title = "", uiOutput("logoutbtn"))
-
 sidebar <- dashboardSidebar(uiOutput("sidebarpanel")) 
-
-# We define the WaitUntil function so that the head loads before the jQueries 
-# in the html documents of the server
-
+# We define the WaitUntil function so that the head loads before the jQueries in the html documents of the server
 body <- dashboardBody(
   tags$script(HTML(
     "
@@ -73,8 +65,7 @@ body <- dashboardBody(
   shinyjs::useShinyjs(), shinyjs::inlineCSS(appCSS), uiOutput("body")
 )
 
-
-
+## UI
 ui <- dashboardPage(header, sidebar, body,
                     tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "bootstrap_custom.css"),tags$script(HTML('
       Shiny.addCustomMessageHandler("jsCode",
@@ -84,6 +75,4 @@ ui <- dashboardPage(header, sidebar, body,
         }
       );
     '))), skin = "blue")
-                    
-                    
                     

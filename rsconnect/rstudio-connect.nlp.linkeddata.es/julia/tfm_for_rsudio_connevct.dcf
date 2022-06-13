@@ -5,9 +5,9 @@ account: julia
 server: rstudio-connect.nlp.linkeddata.es
 hostUrl: https://rstudio-connect.nlp.linkeddata.es/__api__
 appId: 5
-bundleId: 84
+bundleId: 87
 url: https://rstudio-connect.nlp.linkeddata.es/content/7dda9ea4-48f8-49fe-9fc6-60946167281b/
-when: 1654710087.82794
-lastSyncTime: 1654710087.82797
+when: 1655116367.26657
+lastSyncTime: 1655116367.26662
 asMultiple: FALSE
 asStatic: FALSE
