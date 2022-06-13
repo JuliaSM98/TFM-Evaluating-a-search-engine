@@ -12,7 +12,6 @@
 	  background: #eee ;
 	  z-index: 1;
 	}
-	
 
 	#resizable {
 	  width: 100%;
@@ -26,8 +25,8 @@
 	}
 	
     </style>
-<script>
-              var countInput = 0;
+    <script> 
+              var countInput = -1;
               var arr=[];
               var arr2=[];
     </script>
@@ -38,15 +37,12 @@
     </script>
 </head>
 <body>
-
     <p>
     <a href="#" id="toggle_fullscreen">Fullscreen Iframe</a>
     </p>
-    <div id="resizable"> 
-    <div id="includedContent"></div> 
-    </div>
+    <div id="resizable"> <div id="includedContent"></div>  </div>
     <script>
-    WaitUntil(function(){return typeof $("#resizable").resizable !=="undefined"}, function(){
+    WaitUntil(function(){return typeof $("#resizable").resizable !=="undefined" }, function(){
 	$('#resizable').resizable({
 		handles: 's',
       		start: function(event, ui) {
@@ -56,7 +52,7 @@
         	$('#includedContent').css('pointer-events','auto');
       		}
   	});
-  	$('#toggle_fullscreen').on('click', function(){
+  	  	$('#toggle_fullscreen').on('click', function(){
   		
 	  // if already full screen; exit
 	  // else go fullscreen
@@ -90,10 +86,52 @@
 	});
     });
     </script>
-    <script>   
-            Shiny.setInputValue("count",countInput);
-            Shiny.setInputValue("time_stamp_load",arr);
-            Shiny.setInputValue("time_stamp_load_seconds",arr2);
+    <script>    
+            function calcTime(offset) {
+		    // create Date object for current location
+		    var d = new Date();
+
+		    // convert to msec
+		    // subtract local time zone offset
+		    // get UTC time in msec
+		    var utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+
+		    // create new Date object for different city
+		    // using supplied offset
+		    var nd = new Date(utc + (3600000*offset));
+
+		    // return time as a string
+		    return nd.toLocaleString();
+		} 
+		
+		function calcTimeSecs(offset) {
+		    // create Date object for current location
+		    var d = new Date();
+
+		    // convert to msec
+		    // subtract local time zone offset
+		    // get UTC time in msec
+		    var utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+
+		    // create new Date object for different city
+		    // using supplied offset
+		    var nd = new Date(utc + (3600000*offset));
+
+		    // return time as a string
+		    return nd.getTime() ;
+		} 
+		
+	     function doOnLoad() { 
+                countInput++;
+                Shiny.setInputValue("count",countInput);
+                var time = calcTime(2);
+                arr.push(time);
+                var time_sec = calcTimeSecs(2);
+                console.log(time_sec);
+                arr2.push(time_sec);
+                Shiny.setInputValue("time_stamp_load",arr);
+                Shiny.setInputValue("time_stamp_load_seconds",arr2);
+            }
         </script>
 </body>
 </html>

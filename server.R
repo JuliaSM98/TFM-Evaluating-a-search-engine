@@ -1,19 +1,3 @@
-# library(shiny)
-library(shinyjs)
-# library(shinydashboard)
-# library(DT)
-# library(lubridate)
-# library(stringr)
-# library(base)
-# library(glue)
-# library(RSQLite)
-# library(DBI)
-# library(tidyverse)
-# library(xlsx)
-# library(shinysurveys)
-# library(data.table)
-# library(bcrypt)
-# library(xml2)
 
 callback_tasks <- c(
   "table.on('row-reorder', function(e, details, edit){",
@@ -711,10 +695,10 @@ function(input, output, session) {
                            width = NULL,
                            status = "primary",
                            h3("Src Engine 1"),
-                           textInput("html_frame_1", "Please change only the iframe src:", value = isolate(includeHTML(file.path("www/iframe1_link.html")))),
+                           textInput("html_frame_1", label = h4("Please change only the iframe src:", tipify(icon("info-circle"), title ="KeyQ does not load every time the page is changed. To know the number of pages visited per user we must see the Google Analytics page of this engine.", placement ="right")), value = isolate(includeHTML(file.path("www/iframe1_link.html")))),
                            actionButton("save_frame_1","Save Iframe 1"),
                            h3("Src Engine 2"),
-                           textInput("html_frame", label = h4("Please change only the iframe src:", tipify(icon("info-circle"), title = "The current src implements a reverse proxy, with an online CDN service, designed to bypass some Cross-Origin Resource Sharing restrictions. In our case, we overcome the X-Frame-Options: SAMEORIGIN HTTP response header of pubmed, which refuses to display the URL in a frame. If you change this src and you get the same problem with a new URL, you can also overcome it with the “Ignore X-Frame headers” Chrome or Mozilla extensions.", placement ="right")), value = isolate(includeHTML(file.path("www/iframe2_link.html")))),
+                           textInput("html_frame", label = h4("Please change only the iframe src:", tipify(icon("info-circle"), title = "The current src implements a reverse proxy, with the Cloudflare service, designed to bypass some Cross-Origin Resource Sharing restrictions. In our case, we could not display the Pubmed URL in an iframe because of the same origin policy. If you change this src and you get the same problem with a new URL, you can also overcome it with the “Ignore X-Frame headers” Chrome or Mozilla extensions.", placement ="right")), value = isolate(includeHTML(file.path("www/iframe2_link.html")))),
                            actionButton("save_frame","Save Iframe 2")
                          )
                          
