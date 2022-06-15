@@ -1,0 +1,8 @@
+[1,"=> library(shiny); runApp('admin_test.R')\n\n"]
+[2,"\nAttaching package: ‘shinydashboard’\n\nThe following object is masked from ‘package:graphics’:\n\n    box\n\n"]
+[2,"\nAttaching package: ‘dplyr’\n\nThe following objects are masked from ‘package:stats’:\n\n    filter, lag\n\nThe following objects are masked from ‘package:base’:\n\n    intersect, setdiff, setequal, union\n\n\nAttaching package: ‘shinyauthr’\n\nThe following object is masked from ‘package:shiny’:\n\n    runExample\n\n"]
+[2,"\nAttaching package: ‘lubridate’\n\nThe following objects are masked from ‘package:base’:\n\n    date, intersect, setdiff, union\n\n"]
+[2,"── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──\n✓ ggplot2 3.3.5     ✓ purrr   0.3.4\n✓ tibble  3.1.6     ✓ stringr 1.4.0\n✓ tidyr   1.1.4     ✓ forcats 0.5.1\n✓ readr   2.1.1     \n"]
+[2,"── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──\nx lubridate::as.difftime() masks base::as.difftime()\nx lubridate::date()        masks base::date()\nx dplyr::filter()          masks stats::filter()\nx lubridate::intersect()   masks base::intersect()\nx dplyr::lag()             masks stats::lag()\nx lubridate::setdiff()     masks base::setdiff()\nx lubridate::union()       masks base::union()\n"]
+[2,"\nListening on http://127.0.0.1:6095\n"]
+[1,"\nShiny application successfully stopped.\n\n"]

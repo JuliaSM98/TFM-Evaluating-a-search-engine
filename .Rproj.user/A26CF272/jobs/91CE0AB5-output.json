@@ -1,0 +1,5 @@
+[1,"=> library(shiny); runApp('update _table_test.R')\n\n"]
+[2,"Error in parse(file, keep.source = FALSE, srcfile = src, encoding = enc) : \n  /home/julia/Escritorio/TFM/TFM-Evaluating-a-search-engine/update _table_test.R:21:65: inesperado ','\n20:                         choices = list(\"18-22\" = 1, \"22-30\" = 2,\n21:                                        \">30\" = 3), selected = 2),\n                                                                    ^\n"]
+[2,"Warning in readLines(path) :\n  incomplete final line found on '/home/julia/Escritorio/TFM/TFM-Evaluating-a-search-engine/update _table_test.R'\nPossible missing comma at:\n17:        for (x in rows){\n                  ^\nPossible missing comma at:\n17:        for (x in rows){\n                     ^\nError in sourceUTF8(fullpath, envir = new.env(parent = sharedEnv)) : \n  Error sourcing /home/julia/Escritorio/TFM/TFM-Evaluating-a-search-engine/update _table_test.R\nCalls: runApp ... shinyAppFile -> shinyAppDir_appR -> appObj -> func -> sourceUTF8\n"]
+[2,"Ejecución interrumpida\n"]
+[1,"\nShiny application failed (exit status 1).\n\n"]

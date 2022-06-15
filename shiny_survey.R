@@ -24,7 +24,7 @@ if(dim(data)[1]>0){
         saveRDS(submitted, file = "submitted.rds")
         showModal(modalDialog(
           title = "Questionnaire submitted",
-          "Click Start button if you have completed all the questions!",
+          "Click the Start button. You have completed all the questions!",
           easyClose = FALSE,
           footer = NULL
           

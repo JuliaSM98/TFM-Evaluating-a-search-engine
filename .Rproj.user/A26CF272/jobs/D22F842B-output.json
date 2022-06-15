@@ -1,0 +1,5 @@
+[1,"=> library(shiny); source('test_iframe.R')\n\n"]
+[2,"\nAttaching package: ‘shinydashboard’\n\nThe following object is masked from ‘package:graphics’:\n\n    box\n\n"]
+[2,"\nListening on http://127.0.0.1:7847\n"]
+[1,"[1] \"<iframe src=\\\"https://www.elmundo.es/\\\" width=\\\"100%\\\" height=\\\"500\\\"></iframe>\"\n"]
+[1,"\nShiny application successfully stopped.\n\n"]

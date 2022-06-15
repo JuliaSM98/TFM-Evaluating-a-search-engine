@@ -1,0 +1,3 @@
+[1,"=> library(shiny); source('test_condfig.R')\n\n"]
+[2,"\nListening on http://127.0.0.1:7782\n"]
+[2,"Warning: Error in cat: el argumento 1 (type 'list') no es soportado por 'cat'\n  109: cat\n  102: transform\n  101: func\n   99: f\n   98: Reduce\n   89: do\n   88: hybrid_chain\n   87: renderFunc\n   86: output$fileReaderText\n    5: runApp\n"]

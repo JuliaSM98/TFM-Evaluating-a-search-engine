@@ -783,13 +783,13 @@ function(input, output, session) {
                           tags$head(tags$style("#timeleft{color: red;
                                    font-size: 20px;``
                                    }"
-                          )),
+                          ))),
                           div(style="height:7px;"),
                           htmlOutput(num_engine),
                           div(style="height:5px;"),
                           textAreaInput("txt", labelMandatory("Enter the answer below:"),height = "100px"),
                           actionButton("submit_answer", "Submit", class = "btn-primary"),
-                      )))))
+                      ))))
           ) 
         }
       }

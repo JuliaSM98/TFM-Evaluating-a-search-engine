@@ -1,0 +1,4 @@
+[1,"=> library(shiny); source('test_iframe.R')\n\n"]
+[2,"\nAttaching package: ‘shinydashboard’\n\nThe following object is masked from ‘package:graphics’:\n\n    box\n\n"]
+[2,"\nListening on http://127.0.0.1:7939\n"]
+[2,"Warning: Error in attribs: no se pudo encontrar la función \"attribs\"\n  102: deparse\n  101: renderUI\n  100: func\n   87: renderFunc\n   86: output$frame\n    5: runApp\n"]

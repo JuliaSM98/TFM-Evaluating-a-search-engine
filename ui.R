@@ -12,7 +12,7 @@ library(data.table)
 library(bcrypt) 
 library(xml2)
 library(shinyBS)
-
+ 
 # Mandatory star css
 appCSS <- ".mandatory_star { color: red; }
            } "

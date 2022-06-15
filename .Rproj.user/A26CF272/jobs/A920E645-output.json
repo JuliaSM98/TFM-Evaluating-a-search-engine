@@ -1,0 +1,7 @@
+[1,"=> library(shiny); source('login_example.R')\n\n"]
+[2,"\nAttaching package: ‘shinydashboard’\n\nThe following object is masked from ‘package:graphics’:\n\n    box\n\n"]
+[2,"\nAttaching package: ‘DT’\n\nThe following objects are masked from ‘package:shiny’:\n\n    dataTableOutput, renderDataTable\n\n\nAttaching package: ‘shinyjs’\n\nThe following object is masked from ‘package:shiny’:\n\n    runExample\n\nThe following objects are masked from ‘package:methods’:\n\n    removeClass, show\n\n"]
+[2,"\nListening on http://127.0.0.1:6390\n"]
+[2,"This Font Awesome icon ('fa fa-sign-out') does not exist:\n* if providing a custom `html_dependency` these `name` checks can \n  be deactivated with `verify_fa = FALSE`\nThis Font Awesome icon ('dashboard') does not exist:\n* if providing a custom `html_dependency` these `name` checks can \n  be deactivated with `verify_fa = FALSE`\n"]
+[2,"This Font Awesome icon ('fa fa-sign-out') does not exist:\n* if providing a custom `html_dependency` these `name` checks can \n  be deactivated with `verify_fa = FALSE`\nThis Font Awesome icon ('dashboard') does not exist:\n* if providing a custom `html_dependency` these `name` checks can \n  be deactivated with `verify_fa = FALSE`\n"]
+[2,"This Font Awesome icon ('fa fa-sign-out') does not exist:\n* if providing a custom `html_dependency` these `name` checks can \n  be deactivated with `verify_fa = FALSE`\nThis Font Awesome icon ('dashboard') does not exist:\n* if providing a custom `html_dependency` these `name` checks can \n  be deactivated with `verify_fa = FALSE`\n"]

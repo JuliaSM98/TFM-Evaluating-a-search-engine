@@ -1,0 +1,5 @@
+[1,"=> library(shiny); runApp('update _table_test.R')\n\n"]
+[2,"Warning in `[<-.factor`(`*tmp*`, is.na(df[[\"option\"]]), value = \"Placeholder\") :\n  invalid factor level, NA generated\n"]
+[2,"\nListening on http://127.0.0.1:3167\n"]
+[2,"Warning: Error in checkName: Must use single string to index into reactivevalues.\n  56: <Anonymous>\n"]
+[1,"\nShiny application successfully stopped.\n\n"]

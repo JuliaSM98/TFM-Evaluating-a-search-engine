@@ -1,0 +1,5 @@
+[1,"=> shiny::runApp()\n\n"]
+[2,"Loading required package: shiny\n"]
+[2,"\nListening on http://127.0.0.1:3636\n"]
+[2,"\nAttaching package: ‘shinyjs’\n\nThe following object is masked from ‘package:shiny’:\n\n    runExample\n\nThe following objects are masked from ‘package:methods’:\n\n    removeClass, show\n\nWarning: Error in : `server` must be a function\n  74: stop\n  73: shinyApp\n"]
+[1,"\nShiny application successfully stopped.\n\n"]

@@ -1,0 +1,6 @@
+[1,"=> library(shiny); source('login_example.R')\n\n"]
+[2,"\nAttaching package: ‘shinydashboard’\n\nThe following object is masked from ‘package:graphics’:\n\n    box\n\n"]
+[2,"\nAttaching package: ‘DT’\n\nThe following objects are masked from ‘package:shiny’:\n\n    dataTableOutput, renderDataTable\n\n\nAttaching package: ‘shinyjs’\n\nThe following object is masked from ‘package:shiny’:\n\n    runExample\n\nThe following objects are masked from ‘package:methods’:\n\n    removeClass, show\n\n"]
+[2,"\nAttaching package: ‘lubridate’\n\nThe following objects are masked from ‘package:base’:\n\n    date, intersect, setdiff, union\n\n"]
+[2,"\nListening on http://127.0.0.1:7320\n"]
+[2,"Warning: Error in .getReactiveEnvironment()$currentContext: Operation not allowed without an active reactive context.\n• You tried to do something that can only be done from inside a reactive consumer.\n  61: <Anonymous>\nError in .getReactiveEnvironment()$currentContext() : \n  Operation not allowed without an active reactive context.\n• You tried to do something that can only be done from inside a reactive consumer.\n"]

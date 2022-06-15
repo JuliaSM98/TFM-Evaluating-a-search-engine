@@ -1,0 +1,7 @@
+[1,"=> library(shiny); source('login_example.R')\n\n"]
+[2,"\nAttaching package: ‘shinydashboard’\n\nThe following object is masked from ‘package:graphics’:\n\n    box\n\n"]
+[2,"\nAttaching package: ‘DT’\n\nThe following objects are masked from ‘package:shiny’:\n\n    dataTableOutput, renderDataTable\n\n"]
+[2,"\nAttaching package: ‘shinyjs’\n\nThe following object is masked from ‘package:shiny’:\n\n    runExample\n\nThe following objects are masked from ‘package:methods’:\n\n    removeClass, show\n\n"]
+[2,"\nAttaching package: ‘lubridate’\n\nThe following objects are masked from ‘package:base’:\n\n    date, intersect, setdiff, union\n\n"]
+[2,"Error in submitButton(\"login\", \"SIGN IN\", style = \"color: white; background-color:#3c8dbc;\\n                                 padding: 10px 15px; width: 150px; cursor: pointer;\\n                                 font-size: 18px; font-weight: 600;\") : \n  unused argument (style = \"color: white; background-color:#3c8dbc;\\n                                 padding: 10px 15px; width: 150px; cursor: pointer;\\n                                 font-size: 18px; font-weight: 600;\")\nCalls: source ... dots_list -> wellPanel -> div -> dots_list -> div -> dots_list\nEjecución interrumpida\n"]
+[1,"\nShiny application failed (exit status 1).\n\n"]

@@ -1,0 +1,5 @@
+[1,"=> library(shiny); runApp('test_submit_button.R')\n\n"]
+[2,"\nAttaching package: ‘shinydashboard’\n\nThe following object is masked from ‘package:graphics’:\n\n    box\n\n"]
+[2,"Warning: Couldn't coerce the `value` argument to a date string with format yyyy-mm-dd\n"]
+[2,"\nListening on http://127.0.0.1:4008\n"]
+[1,"\nShiny application successfully stopped.\n\n"]
