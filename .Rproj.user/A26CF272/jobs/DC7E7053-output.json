@@ -1,4 +1,0 @@
-[1,"=> library(shiny); runApp('example_counter.R')\n\n"]
-[2,"\nAttaching package: ‘lubridate’\n\nThe following objects are masked from ‘package:base’:\n\n    date, intersect, setdiff, union\n\n"]
-[2,"\nAttaching package: ‘shinydashboard’\n\nThe following object is masked from ‘package:graphics’:\n\n    box\n\nWarning in file(file, \"rt\") :\n  no fue posible abrir el archivo 'CSV_tests/tasks_descrip.csv': No existe el archivo o el directorio\nError in file(file, \"rt\") : no se puede abrir la conexión\nCalls: runApp ... eval -> ..stacktraceon.. -> read.csv -> read.table -> file\nEjecución interrumpida\n"]
-[1,"\nShiny application failed (exit status 1).\n\n"]

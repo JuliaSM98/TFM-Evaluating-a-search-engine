@@ -1,6 +1,0 @@
-[1,"=> shiny::runApp()\n\n"]
-[2,"Loading required package: shiny\n"]
-[2,"\nListening on http://127.0.0.1:7150\n"]
-[2,"Warning: Error in sidebarLayout: unused arguments (br(), submitButton(\"Submit\"), mainPanel())\n"]
-[2,"  77: dots_list\n  76: div\n  73: fluidPage\n"]
-[1,"\nShiny application successfully stopped.\n\n"]

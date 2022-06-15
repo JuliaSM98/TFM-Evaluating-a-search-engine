@@ -1,6 +1,0 @@
-[1,"=> library(shiny); runApp('save_user_example.R')\n\n"]
-[2,"\nAttaching package: ‘shinyjs’\n\nThe following object is masked from ‘package:shiny’:\n\n    runExample\n\nThe following objects are masked from ‘package:methods’:\n\n    removeClass, show\n\n"]
-[2,"\nListening on http://127.0.0.1:3837\n"]
-[2,"Warning: Error in shinyjs::toggleState: objeto 'mandatoryFilled' no encontrado\n"]
-[2,"  46: shinyjs::toggleState\n  45: observe [/home/julia/Escritorio/TFM/TFM-Evaluating-a-search-engine/save_user_example.R#40]\n  44: <observer>\n   1: runApp\n"]
-[1,"\nShiny application successfully stopped.\n\n"]

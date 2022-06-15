@@ -1,6 +1,0 @@
-[1,"=> shiny::runApp()\n\n"]
-[2,"Loading required package: shiny\n"]
-[2,"\nListening on http://127.0.0.1:6739\n"]
-[2,"Warning: Error in match.arg: 'arg' must be NULL or a character vector\n"]
-[2,"  80: stop\n  79: match.arg\n  78: sidebarLayout\n"]
-[1,"\nShiny application successfully stopped.\n\n"]

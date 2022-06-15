@@ -1,4 +1,0 @@
-[1,"=> library(shiny); runApp('render_survey.R')\n\n"]
-[2,"Error in parse(file, keep.source = FALSE, srcfile = src, encoding = enc) : \n  /home/julia/Escritorio/TFM/TFM-Evaluating-a-search-engine/render_survey.R:72:44: inesperado '='\n71:     for (i in range(row)){\n72:       data <- c(data, getSurveyData()[i,2] =\n                                               ^\n"]
-[2,"Possible missing comma at:\n71:    for (i in range(row)){\n              ^\nPossible missing comma at:\n71:    for (i in range(row)){\n                 ^\nError in sourceUTF8(fullpath, envir = new.env(parent = sharedEnv)) : \n  Error sourcing /home/julia/Escritorio/TFM/TFM-Evaluating-a-search-engine/render_survey.R\nCalls: runApp ... shinyAppFile -> shinyAppDir_appR -> appObj -> func -> sourceUTF8\nEjecución interrumpida\n"]
-[1,"\nShiny application failed (exit status 1).\n\n"]
