@@ -861,15 +861,16 @@ function(input, output, session) {
   output$tab1<-renderUI({getPage1()})
   output$tab2<-renderUI({getPage2()})
   count <- reactive({ input$count })
-  array_of_times <- reactive({input$time_stamp_load})
+  array_of_times <- reactive(gsub("^.*?, ","",input$time_stamp_load))
   array_of_sec <- reactive({input$time_stamp_load_seconds})
   
   observeEvent(input$submit_answer,{
     output$tab1<-renderUI({getPage1()})
     output$tab2<-renderUI({getPage2()})
     count <- reactive({ input$count }) 
-    array_of_times <- reactive({input$time_stamp_load})
+    array_of_times <- reactive(gsub("^.*?, ","",input$time_stamp_load))
     array_of_sec <- reactive({input$time_stamp_load_seconds})
+    #print( gsub("^.*?, ","",input$time_stamp_load))
   })
   
   # Render countdown clock
