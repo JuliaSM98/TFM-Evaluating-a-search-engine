@@ -1,7 +1,0 @@
-[1,"=> library(shiny); runApp('test_submit_button.R')\n\n"]
-[2,"\nAttaching package: ‘shinydashboard’\n\nThe following object is masked from ‘package:graphics’:\n\n    box\n\n"]
-[2,"\nListening on http://127.0.0.1:7784\n"]
-[1,"NULL\n"]
-[2,"Warning: Error in hist.default: 'x' must be numeric\n"]
-[2,"  171: stop\n  170: hist.default\n  168: renderPlot [/home/julia/Escritorio/TFM/TFM-Evaluating-a-search-engine/test_submit_button.R#19]\n  166: func\n  126: drawPlot\n  112: <reactive:plotObj>\n   96: drawReactive\n   83: renderFunc\n   82: output$distPlot\n    1: runApp\n"]
-[1,"\nShiny application successfully stopped.\n\n"]

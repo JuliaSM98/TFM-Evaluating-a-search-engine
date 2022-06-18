@@ -1,8 +1,0 @@
-[1,"=> library(shiny); source('login_example.R')\n\n"]
-[2,"\nAttaching package: ‘shinydashboard’\n\nThe following object is masked from ‘package:graphics’:\n\n    box\n\n\nAttaching package: ‘DT’\n\nThe following objects are masked from ‘package:shiny’:\n\n    dataTableOutput, renderDataTable\n\n"]
-[2,"\nAttaching package: ‘shinyjs’\n\nThe following object is masked from ‘package:shiny’:\n\n    runExample\n\nThe following objects are masked from ‘package:methods’:\n\n    removeClass, show\n\n"]
-[2,"\nAttaching package: ‘lubridate’\n\n"]
-[2,"The following objects are masked from ‘package:base’:\n\n    date, intersect, setdiff, union\n\n"]
-[2,"\nListening on http://127.0.0.1:4630\n"]
-[2,"Warning: Error in as.vector: cannot coerce type 'closure' to vector of type 'character'\n"]
-[2,"  122: as.character.default\n  118: as.tags.default\n  112: func\n  111: FUN\n  110: lapply\n  109: FUN\n  108: lapply\n  107: FUN\n  106: lapply\n  105: rewriteTags\n  104: utils::getFromNamespace(\"tagify\", \"htmltools\")\n  103: processDeps\n  102: transform\n  101: func\n   99: f\n   98: Reduce\n   89: do\n   88: hybrid_chain\n   87: renderFunc\n   86: output$body\n    5: runApp\n"]

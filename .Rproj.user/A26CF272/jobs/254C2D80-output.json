@@ -1,6 +1,0 @@
-[1,"=> library(shiny); source('app.R')\n\n"]
-[2,"\nAttaching package: ‘shinyjs’\n\nThe following object is masked from ‘package:shiny’:\n\n    runExample\n\nThe following objects are masked from ‘package:methods’:\n\n    removeClass, show\n\n"]
-[2,"\nAttaching package: ‘shinydashboard’\n\nThe following object is masked from ‘package:graphics’:\n\n    box\n\n"]
-[2,"\nAttaching package: ‘DT’\n\nThe following objects are masked from ‘package:shiny’:\n\n    dataTableOutput, renderDataTable\n\n"]
-[2,"\nAttaching package: ‘lubridate’\n\nThe following objects are masked from ‘package:base’:\n\n    date, intersect, setdiff, union\n\n"]
-[2,"\nListening on http://127.0.0.1:3426\n"]

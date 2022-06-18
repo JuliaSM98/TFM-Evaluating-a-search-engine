@@ -1,6 +1,0 @@
-[1,"=> library(shiny); source('login_example.R')\n\n"]
-[2,"\nAttaching package: ‘shinydashboard’\n\nThe following object is masked from ‘package:graphics’:\n\n    box\n\n"]
-[2,"\nAttaching package: ‘DT’\n\nThe following objects are masked from ‘package:shiny’:\n\n    dataTableOutput, renderDataTable\n\n\nAttaching package: ‘shinyjs’\n\nThe following object is masked from ‘package:shiny’:\n\n    runExample\n\nThe following objects are masked from ‘package:methods’:\n\n    removeClass, show\n\n"]
-[2,"\nAttaching package: ‘lubridate’\n\nThe following objects are masked from ‘package:base’:\n\n    date, intersect, setdiff, union\n\n"]
-[2,"\nListening on http://127.0.0.1:5857\n"]
-[2,"Warning: Error in autoInvalidate: no se pudo encontrar la función \"autoInvalidate\"\n  172: renderPlot\n  170: func\n  130: drawPlot\n  116: <reactive:plotObj>\n  100: drawReactive\n   87: renderFunc\n   86: output$plot\n    5: runApp\n"]

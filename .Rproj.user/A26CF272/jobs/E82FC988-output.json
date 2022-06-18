@@ -1,5 +1,0 @@
-[1,"=> library(shiny); source('test_iframe.R')\n\n"]
-[2,"\nAttaching package: ‘shinydashboard’\n\nThe following object is masked from ‘package:graphics’:\n\n    box\n\n"]
-[2,"\nListening on http://127.0.0.1:3873\n"]
-[2,"Warning: Error in !: argumento de tipo inválido\n"]
-[2,"  55: installExprFunction\n  54: renderText\n  53: server\nError in !quoted : argumento de tipo inválido\n"]

@@ -1,7 +1,0 @@
-[1,"=> library(shiny); runApp('login_example2.R')\n\n"]
-[2,"\nAttaching package: ‘shinyauthr’\n\nThe following object is masked from ‘package:shiny’:\n\n    runExample\n\n"]
-[2,"\nListening on http://127.0.0.1:5167\n"]
-[2,"Warning: Error in server: objeto 'user' no encontrado\n"]
-[2,"  49: server [/home/julia/Escritorio/TFM/TFM-Evaluating-a-search-engine/login_example2.R#44]\n"]
-[2,"Error in server(...) : objeto 'user' no encontrado\n"]
-[1,"\nShiny application successfully stopped.\n\n"]

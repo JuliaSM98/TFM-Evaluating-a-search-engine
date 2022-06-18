@@ -1,5 +1,0 @@
-[1,"=> library(shiny); runApp('example_csv.R')\n\n"]
-[2,"\nAttaching package: ‘DT’\n\nThe following objects are masked from ‘package:shiny’:\n\n    dataTableOutput, renderDataTable\n\n"]
-[2,"\nListening on http://127.0.0.1:7377\n"]
-[2,"Warning in file(file, \"rt\") :\n  no fue posible abrir el archivo '/CSV_tests/tasks_descrip.csv': No existe el archivo o el directorio\nWarning: Error in file: no se puede abrir la conexión\n  158: file\n  157: read.table\n  156: read.csv\n  155: eventReactiveValueFunc [/home/julia/Escritorio/TFM/TFM-Evaluating-a-search-engine/example_csv.R#15]\n  111: data\n  104: exprFunc [/home/julia/Escritorio/TFM/TFM-Evaluating-a-search-engine/example_csv.R#19]\n  103: widgetFunc\n  102: ::\nhtmlwidgets\nshinyRenderWidget\n  101: func\n   88: renderFunc\n   87: renderFunc\n   83: renderFunc\n   82: output$dt\n    1: runApp\n"]
-[1,"\nShiny application successfully stopped.\n\n"]

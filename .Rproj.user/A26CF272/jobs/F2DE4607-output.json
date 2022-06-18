@@ -1,3 +1,0 @@
-[1,"=> library(shiny); source('app.R')\n\n"]
-[2,"Error in source(\"app.R\") : app.R:216:63: inesperado '{'\n215:     isolate({\n216:       if (USER$login == TRUE & (minutes()>=0 & seconds()>=0 ) {\n                                                                   ^\nEjecución interrumpida\n"]
-[1,"\nShiny application failed (exit status 1).\n\n"]

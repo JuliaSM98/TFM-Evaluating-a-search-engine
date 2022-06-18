@@ -1,4 +1,0 @@
-[1,"=> library(shiny); runApp('test_submit_button.R')\n\n"]
-[2,"\nAttaching package: ‘shinydashboard’\n\nThe following object is masked from ‘package:graphics’:\n\n    box\n\n"]
-[2,"Error in bsModal(\"formExample\", \"form\", \"gobutton\", size = \"small\", textInput(\"first.name\",  : \n  no se pudo encontrar la función \"bsModal\"\nCalls: runApp ... dashboardBody -> div -> dots_list -> <Anonymous> -> dots_list\nEjecución interrumpida\n"]
-[1,"\nShiny application failed (exit status 1).\n\n"]
