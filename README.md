@@ -2,6 +2,7 @@
 
 ## Description
 This repository stores the code of a web application designed to carry out subject-centered usability experiments that will allow two search engines from the same domain to be compared. The application allows configuring and monitoring the tasks that each user performs with one of the search engines, in addition to allowing the administrator user to view and download all the data collected from the experiments. In addition, the admin user can configure many aspects of the application, such as the search engine URL or the text within the website. This repository can be used by anyone who wants to perform similar usability experiments with any search engine.
+
 The fully configurable application has been posted online [here](https://rstudio-connect.nlp.linkeddata.es/content/7dda9ea4-48f8-49fe-9fc6-60946167281b).
  
 ## Dependencies
